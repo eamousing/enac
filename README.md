@@ -8,6 +8,3 @@ cd build
 cmake ..
 make
 ```
-
-
-
