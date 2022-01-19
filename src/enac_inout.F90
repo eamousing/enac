@@ -102,15 +102,19 @@ contains
                 read(string,*) species, regintv(species), lastreg(species)
             end if
         end do
-        call read_line(10, string, io); read(string,*) species, i, j, tmp_value
-        if (j .gt. 0) then
-            recruit_parameters(species,i,j,1) = tmp_value
-            ! NOTE(EAM): Why is it necessary with 3 copies of this value?
-            recruit_parameters(species,i,j,2) = recruit_parameters(species,i,j,1)
-            recruit_parameters(species,i,j,3) = recruit_parameters(species,i,j,1)
-        else
-            prime_factor(species) = tmp_value
-        end if
+        do
+            call read_line(10, string, io)
+            if (io .ne. 0) exit
+            read(string,*) species, i, j, tmp_value
+            if (j .gt. 0) then
+                recruit_parameters(species,i,j,1) = tmp_value
+                ! NOTE(EAM): Why is it necessary with 3 copies of this value?
+                recruit_parameters(species,i,j,2) = recruit_parameters(species,i,j,1)
+                recruit_parameters(species,i,j,3) = recruit_parameters(species,i,j,1)
+            else
+                prime_factor(species) = tmp_value
+            end if
+        end do
         close(10)
 
         ! Check recruitment parameters, there shall be 20 in total
@@ -150,8 +154,9 @@ contains
         sel_pattern = -999.0
 
         open(10, file="in/"//"biobyage.txt")
-        do while (nspec .le. nspec .and. j .le. 3 .and. k .le. 3)
+        do
             call read_line(10, string, io); read(string,*) i,j,k,bio_opt(i,j,k)
+            if (i .eq. nspec .and. j .eq. 3 .and. k .eq. 3) exit
         end do
         do
             call read_line(10, string, io)
