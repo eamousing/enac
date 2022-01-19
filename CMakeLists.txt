@@ -6,6 +6,7 @@ enable_language(Fortran)
 set(sources 
     src/enac_commons.F90
     src/enac_functions.F90
+    src/enac_inout.F90
     src/enac_main.F90
 )
 
