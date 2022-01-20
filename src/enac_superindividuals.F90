@@ -84,7 +84,7 @@ contains
         ! Get the total number of recruits for the current species in the current year in r1
         real :: r0, r1, a, b, sigma, rho, rx, xsi, rnx, snrn
         real :: amplitude, period, phase, xm, trunchigh, trunclow
-        integer :: isrfunc, distribution, regime, trunc_type
+        integer :: isrfunc, distribution, regime, trunc_type, i
       
         if (icodeshift(species) .eq. 3 .and. year .gt. 0) then
             regime= recregime(species)
@@ -136,52 +136,60 @@ contains
                 r0 = a*ssb(species,year)*exp(-b*ssb(species,year))
             end if
         end if ! flag_prime yes or no
-        ! get random noise - always
-10      rx = rnx(rintvar)
-        xsi = snrn(rx)
+
         distribution = nint(recruit_parameters(species,regime,2,2))
       
-        ! calculate effect of mackerel predation (J. Trochta)
-        ! This version modifies sigma and is based on quantile regression fit (90th)
-        ! i.e. key assumption is that mackerel 'limits' recruitment by dampening recruitment variance, not the mean
+        !! JTT: Calculate effect of mackerel predation (J. Trochta)
+        !! This version modifies sigma and is based on quantile regression fit (90th)
+        !! i.e. key assumption is that mackerel 'limits' recruitment by dampening recruitment variance, not the mean
         if (link_parameters(species,3,1) .eq. 1 .and. year .gt. 0 .and. species .eq. 3) then 
             sigma = effect(species)
         end if
-      
-        rec_res(species,year) = xsi*sigma
-      
-        ! Autocorrelation in residuals if rho!=0.0
-        if (rho .ne. 0.0 .and. year .gt. -maxage) then
-            rec_res(species,year) = rho*rec_res(species,year-1) + &
-                sqrt(1 - rho**2)*rec_res(species,year)
-        end if
-      
-        if (distribution .eq. 1) then
-            xm = 1.0 + rec_res(species,year)
-        else if (distribution .eq. 2) then
-            xm = exp(rec_res(species,year) - sigma**2/2.0)
-        end if
-      
-        ! Truncation
+        
+        !! Truncation type and bounds
+        !! Truncation==1 denotes bounds as lower and upper fraction of sigma
+        !! Truncation==2 denotes bounds on multiplier xm
         trunc_type = nint(recruit_parameters(species,regime,3,2))
         trunclow = recruit_parameters(species,regime,7,2)
         trunchigh = recruit_parameters(species,regime,8,2)
-           
-        ! Variant 1: Trunc is lower and upper fraction of sigma (lower negative).
-        if (trunc_type .eq. 1) then
-            if (xsi .lt. trunclow .or. xsi .gt. trunchigh) then
-                goto 10
-            endif
-        else
-        ! Variant 2:  upper and lower bounds on the multiplier xm,
-            if (xm .lt. trunclow .or. xm .gt. trunchigh) then
-                !if(species.eq.3) print *, xsi,sigma*xsi,sigma**2/2.0,xm,trunclow,trunchigh
-                goto 10
-            endif
-        endif
-        ! Final nummber, never negative
+
+        do i = 1, 10
+            ! get random noise - always
+            rx = rnx(rintvar)
+            xsi = snrn(rx)
+            rec_res(species,year) = xsi*sigma
+        
+            !! Autocorrelation in residuals if rho!=0.0
+            if (rho .ne. 0.0 .and. year .gt. -maxage) then
+                rec_res(species,year) = rho*rec_res(species,year-1) + &
+                    sqrt(1 - rho**2)*rec_res(species,year)
+            end if
+        
+            if (distribution .eq. 1) then
+                xm = 1.0 + rec_res(species,year)
+            else if (distribution .eq. 2) then
+                xm = exp(rec_res(species,year) - sigma**2/2.0)
+            end if
+            
+            ! Variant 1: Trunc is lower and upper fraction of sigma (lower negative).
+            if (trunc_type .eq. 1) then
+                if (xsi .gt. trunclow .and. xsi .lt. trunchigh) then
+                    exit
+                else if(i .eq. 10) then
+                    write(*,*) 'Random recruitment exceeded bounds 10 times in a row - iterative procedure stopped'
+                end if
+            else
+            ! Variant 2:  upper and lower bounds on the multiplier xm,
+                if (xm .gt. trunclow .and. xm .lt. trunchigh) then
+                    exit
+                else if(i .eq. 10) then
+                    write(*,*) 'Random recruitment exceeded bounds 10 times in a row - iterative procedure stopped'
+                end if
+            end if
+            ! Final nummber, never negative
+        end do
       
-        r1=max(xm*r0,0.0)       
+        r1 = max(xm*r0,0.0)       
       
         if (link_parameters(species,3,1) .eq. 1 .and. year .gt. 0 .and. species .eq. 3) then 
             if (year.eq.1) open(67, file='Out/'//'Mac_vs_Her.txt')
