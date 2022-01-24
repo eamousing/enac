@@ -21,12 +21,13 @@ module enac_decision_model
 contains
 
   subroutine decision_model(maxspec, maxtimestep, maxlkl, dectac, ntacyr)
-    ! Note: the parameter maxyr sets the outer dimension of the years.
+    !! The parameter maxyr sets the outer dimension of the years.
     integer, parameter :: maxyr = 2
 
+    !! In and out arguments
     integer, intent(in) :: maxspec, maxtimestep, maxlkl
-    integer, intent(out) :: ntacyr
     real, dimension (1:maxspec, 0:maxyr), intent(out) :: dectac
+    integer, intent(out) :: ntacyr
 
     ! transferred variables
     ! These were transferred to the original decmodul. Here, they are
@@ -37,8 +38,10 @@ contains
     ! Note that the years (iy) here refer to the internal years in decompodul. The calling
     ! year is year 0 and the tac year is year 1. Normally, maxyr is 2, since it sometimes
     ! is needed to project the stock into the year after the TAC is taken
-  
-    integer :: mart, mseas, maxl
+    
+    !! Local variables
+    integer :: mart, mseas, maxl, i, iart, iy, iseas, lkl, lklminus, lklplus, si, regime
+    real :: length, mlow, mhigh, slope1, slope2, l1_50, l2_50, natmor
     real, dimension (1:maxspec, 1:4) :: speclen  !cols: interval, min size class, max size class, min size for TSB
     real, dimension (1:maxspec, 0:maxyr,10) :: bioparam1  !3rd dim: for each parameter defined below 
     real, dimension (1:maxspec, 0:maxyr, 1:maxtimestep, 1:4, 2) :: bioparam2 !4th dim: parameter, 5th dim: parameter specific to something (juvenile and adult K)
@@ -47,10 +50,6 @@ contains
     real, dimension (1:maxspec, 1:maxtimestep) :: seastac
     real, dimension (1:maxspec, 22) :: options
     integer, dimension (1:maxspec) :: regim
-  
-    ! Local variables
-    integer :: i, iart, iy, iseas, lkl, lklminus, lklplus, si, regime
-    real :: length, mlow, mhigh, slope1, slope2, l1_50, l2_50, natmor
 
     ! Species currently defined in framework:
     ! 1: kolmule
@@ -59,7 +58,7 @@ contains
   
     ! to avoid confusion with common-variables:
     ! decmodul only sees the year from the current year until maxyr, normally maxyr =2, 
-    ! to allow rules that look inot the year after the tac-year
+    ! to allow rules that look in the year after the tac-year
     mart = maxspec
     mseas = maxtimestep
     maxl = maxlkl ! from enac_commons, only used here
@@ -84,32 +83,32 @@ contains
   
     ! bioparam1
     do iart = 1, mart
-        do iy = 0, maxyr
-            regime = nregact(iart,iy) ! GLOBAL
-            ! Linf
-            bioparam1(iart,iy,1) = stdparameters(iart,1,1,1) ! GLOBAL
-            ! Recruiting length
-            bioparam1(iart,iy,2) = recruit_parameters(iart,regime,17,3) ! GLOBAL
-            ! CV recruiting length
-            bioparam1(iart,iy,3) = recruit_parameters(iart,regime,18,3) ! GLOBAL
-            ! Spawning season
-            bioparam1(iart,iy,4) = spawning_season(iart) ! GLOBAL
-            ! Recruiting season
-            bioparam1(iart,iy,5) = recruit_season(iart) ! GLOBAL
-            ! L50 in maturation logistic function
-            bioparam1(iart,iy,6) = decparam(iart,3,1) ! GLOBAL
-            ! Slope in maturation logistic function
-            bioparam1(iart,iy,7) = decparam(iart,3,2) ! GLOBAL
-            ! Code for recruitment function
-            bioparam1(iart,iy,8) = recruit_parameters(iart,regime,1,1) ! GLOBAL
-            ! Note on recruit-parameters: Decmodul will only see the assumed a and b-parameters,
-            ! not the spasmodic or periodic variants that go into the real recruitment
-            ! But it will know the regime in the calling year    
-            ! Recruitment a-parameter
-            bioparam1(iart,iy,9) = recruit_parameters(iart,regime,4,3) ! GLOBAL
-            ! Recruitment b-parameter
-            bioparam1(iart,iy,10) = recruit_parameters(iart,regime,5,3) ! GLOBAL
-        end do
+      do iy = 0, maxyr
+          regime = nregact(iart,iy) ! GLOBAL
+          ! Linf
+          bioparam1(iart,iy,1) = stdparameters(iart,1,1,1) ! GLOBAL
+          ! Recruiting length
+          bioparam1(iart,iy,2) = recruit_parameters(iart,regime,17,3) ! GLOBAL
+          ! CV recruiting length
+          bioparam1(iart,iy,3) = recruit_parameters(iart,regime,18,3) ! GLOBAL
+          ! Spawning season
+          bioparam1(iart,iy,4) = spawning_season(iart) ! GLOBAL
+          ! Recruiting season
+          bioparam1(iart,iy,5) = recruit_season(iart) ! GLOBAL
+          ! L50 in maturation logistic function
+          bioparam1(iart,iy,6) = decparam(iart,3,1) ! GLOBAL
+          ! Slope in maturation logistic function
+          bioparam1(iart,iy,7) = decparam(iart,3,2) ! GLOBAL
+          ! Code for recruitment function
+          bioparam1(iart,iy,8) = recruit_parameters(iart,regime,1,1) ! GLOBAL
+          ! Note on recruit-parameters: Decmodul will only see the assumed a and b-parameters,
+          ! not the spasmodic or periodic variants that go into the real recruitment
+          ! But it will know the regime in the calling year    
+          ! Recruitment a-parameter
+          bioparam1(iart,iy,9) = recruit_parameters(iart,regime,4,3) ! GLOBAL
+          ! Recruitment b-parameter
+          bioparam1(iart,iy,10) = recruit_parameters(iart,regime,5,3) ! GLOBAL
+      end do
     end do
   
     ! bioparam2
@@ -164,9 +163,9 @@ contains
       ! Initialize      
       do lkl = 1, maxl
         rninit(iart,lkl,1) = 0.0
-        ! rninit(.,.,2) is used to make noise to the N-values in the observation model.
-        ! Here there is a need for extensions, e.g. length dependence, annual effects, etc.
-        ! and it should not be hardcoded.
+        !! rninit(.,.,2) is used to make noise to the N-values in the observation model.
+        !! Here there is a need for extensions, e.g. length dependence, annual effects, etc.
+        !! and it should not be hardcoded.
         rninit(iart,lkl,2) = 0.30
       end do
       
@@ -176,7 +175,6 @@ contains
       ! Loop through each SI 
       do si = nsistart(iart), nsi2(iart)   ! GLOBAL 
         lkl = int(sistatekeep(iart,si,3)) ! GLOBAL
-   
         if (lkl .lt. lklminus) then
           rninit(iart,lklminus,1) = rninit(iart,lklminus,1) + sistatekeep(iart,si,1) ! GLOBAL
         else if (lkl .gt. lklplus) then
@@ -199,9 +197,9 @@ contains
         options(iart,i) = manage_opt(iart,i) ! col 3 from optinn ! GLOBAL
       end do
 
-      ! Options 1 and 2 are exceptions:
-      ! Option (.,1) is set to 1 in manage_opt in the main program, and it is transferred here.   
-      ! Option (.,2) tac in the call year is set here to what is already determined as tac in year 0
+      !! Options 1 and 2 are exceptions:
+      !! Option (.,1) is set to 1 in manage_opt in the main program, and it is transferred here.   
+      !! Option (.,2) tac in the call year is set here to what is already determined as tac in year 0
       options(iart,2) = tac(iart,year) ! GLOBAL
     end do  
   
@@ -209,7 +207,6 @@ contains
     
     call decmodul(mart,maxyr,mseas,maxl,speclen,bioparam1,bioparam2,bioparam3,rninit,options,seastac,rintvar,dectac,regim) ! GLOBAL (rintvar)
     ntacyr = maxyr
-  
   end subroutine decision_model
 
   subroutine decmodul(mart, maxyr, mseas, maxl, speclen, bioparam1, bioparam2, & 
@@ -218,6 +215,7 @@ contains
     ! Some variables have names similar to enac_commons, but commons are not visible here    
     ! These are transferred variables
    
+    !! In and out arguments
     integer, intent(in) :: mart, maxyr, mseas, maxl
     real, dimension (1:mart, 1:4), intent(in) :: speclen
     real, dimension (1:mart, 0:maxyr, 10), intent(in) :: bioparam1
@@ -225,24 +223,19 @@ contains
     real, dimension (1:mart, 0:maxyr, 1:mseas, maxl, 3), intent(in) :: bioparam3
     real, dimension (1:mart, 1:maxl, 2), intent(in) :: rninit
     real, dimension (1:mart, 22), intent(in) :: options
+    real, dimension (1:mart, 1:mseas), intent(inout) :: seastac
+    double precision, intent(in) :: rintvar
+    real, dimension (mart, 0:maxyr), intent(out) :: dectac
     integer, dimension (1:mart), intent(in) :: regim
 
-    real, dimension (1:mart, 1:mseas), intent(inout) :: seastac
-
-    real, dimension (mart, 0:maxyr), intent(out) :: dectac
-   
-    double precision, intent(in) :: rintvar
-
-    ! Local variables som utveksles
-    real, dimension(mart, 0:maxyr, mseas) ::  tactemp
-    real, dimension (mart, 0:maxyr, mseas, maxl) :: rn
-    real, dimension (mart, 0:maxyr, mseas) :: tacprev
-    real, dimension (mart, 2) :: decbasis
-    real, dimension (mart) :: v
-   
-    ! Local temporary variables
+    !! Local variables
     integer :: iart, iy, lkl, iseas, istart, nriter
     real :: summ, ssq
+    real, dimension(mart, 0:maxyr, mseas) ::  tactemp
+    real, dimension(mart, 0:maxyr, mseas, maxl) :: rn
+    real, dimension(mart, 0:maxyr, mseas) :: tacprev
+    real, dimension(mart, 2) :: decbasis
+    real, dimension(mart) :: v
    
     ! Initialize rn and tactemp, and build bioparam3 (natural mortality)
     do iart = 1, mart
@@ -266,16 +259,16 @@ contains
         summ = summ + seastac(iart,iseas)
       end do
       
-      ! Normalize seastac (relative tac in season).
+      !! Normalize seastac (relative tac in season).
       if (summ .le. 0.0) write(*,*) 'Warning: Missing seasonal specification of TAC'
       do iseas=1,mseas
         seastac(iart,iseas) = seastac(iart,iseas) / summ
       end do
     end do
    
-    ! Fill in tactemp (copy to tacprev) with the TAC for year 0 as preliminary
+    !! Fill in tactemp (copy to tacprev) with the TAC for year 0 as preliminary
     do iart = 1, mart
-      ! dectac is updated with the previously decided tac for year 0
+      !! dectac is updated with the previously decided tac for year 0
       dectac(iart,0) = options(iart,2)
       do iy = 0, maxyr
         if (iy .eq. 0) then
@@ -291,30 +284,29 @@ contains
       end do
     end do
    
-    ! Fill in rn with obs-model values for first year and season, add noise to rn-values
+    !! Fill in rn with obs-model values for first year and season, add noise to rn-values
     call dobsmodel(rn,mart,maxyr,mseas,maxl,speclen,rninit,options,rintvar)
    
     ! Iteration loop
     do nriter = 0, 20
-      ! Project the stock forwards with the current TAC
-      ! Will set tactemp=0.0 if not enough fish for catching; simulates within season closure (depletflag==1)
-      ! depletflag assigned in ddie based on high F criteria
+      !! Project the stock forwards with the current TAC
+      !! Will set tactemp=0.0 if not enough fish for catching; simulates within season closure (depletflag==1)
+      !! depletflag assigned in ddie based on high F criteria
       call dproject(rn,tactemp,mart,maxyr,mseas,maxl,speclen,bioparam1,bioparam2,bioparam3,options)
      
-      ! Derive the decision basis
+      !! Derive the decision basis
       call dgetdecbasis(rn,decbasis,mart,maxyr,mseas,maxl,speclen,bioparam1,bioparam3,options)
      
-      ! Apply the rule, get the exploitation measure v from the decision basis for all species
-      call drule(mart,decbasis,v,options,regim)
+      !! Apply the rule, get the exploitation measure v from the decision basis for all species
+      call drule(mart,decbasis,v,options)
      
-      ! Translate the v to TAC for all years and species
+      !! Translate the v to TAC for all years and species
       call dtranslate(rn,tactemp,v,mart,maxyr,mseas,maxl,speclen,bioparam2,bioparam3,options,seastac)
      
-      ! Modify the TACs (filters, constraints)
-      ! Fill in for future years
+      !! Modify the TACs (filters, constraints) and fill in for future years
       call dmodifytac(tactemp,mart,maxyr,mseas,options)
 
-      ! Compare with previous (tactemp vs. tacprev), in case the decided TAC changes the decision basis
+      !! Compare with previous (tactemp vs. tacprev), in case the decided TAC changes the decision basis
       ssq = 0.0
 
       do iart = 1, mart
@@ -323,20 +315,20 @@ contains
             if (tacprev(iart,iy,iseas) .gt. 0.0 .and. tactemp(iart,iy,iseas) .gt. 0.0) then
               ssq = ssq + log(tactemp(iart,iy,iseas) / tacprev(iart,iy,iseas)) ** 2  
             else
-              ! This means that if the tac is set to 0 in the decision process, the loop is broken, and the 
-              ! zero tac is returned
+              !! This means that if the tac is set to 0 in the decision process, the loop is broken, and the 
+              !! zero tac is returned
               ssq = 0.0
             end if
           end do
         end do
       end do
      
-      ! If not similar, iterate
+      !! If not similar, iterate
       if (ssq .gt. 0.0001) then
         if (nriter .eq. 20) then
-          ! This happens if the iteration becomes cyclic.
-          ! The simple solution is to set the value mid-way between current and previous.
-          ! Normally, that should be quite close, but a warning is given.
+          !! This happens if the iteration becomes cyclic.
+          !! The simple solution is to set the value mid-way between current and previous.
+          !! Normally, that should be quite close, but a warning is given.
           write(*,*) 'Warning: Line search in decmodul broken at iteration nr. ', nriter, ': SSQ: ', ssq 
           do iart = 1, mart
             do iy = 1, maxyr
@@ -377,7 +369,7 @@ contains
     !! dobsmodel fills in rn with obs-model values for first year and season,
     !! by adding lognormal random error to the true numbers in rninit
     
-    !! Output and input arguments to dobsmodel
+    !! In and out arguments
     real, dimension(mart,0:maxyr,mseas,maxl), intent(out) :: rn
     integer, intent(in) :: mart, maxyr, mseas, maxl
     real, dimension(mart,1:4), intent(in) :: speclen
@@ -404,14 +396,12 @@ contains
   end subroutine dobsmodel
 
   subroutine dproject(rn,tactemp,mart,maxyr,mseas,maxl,speclen,bioparam1,bioparam2,bioparam3,options)
-    !! dproject generates the stock number table rn by projecting the stock numbers at length forwards in time
-    ! with given parameters and loss due to given quotas in tactemp. Adds recruits in the recruiting season.
+    !! dproject generates the stock number table 'rn' by projecting the stock numbers at length forwards in time
+    !! with given parameters and loss due to given quotas in tactemp. Adds recruits in the recruiting season.
    
-    !! Local variables that are exchanged
-    real, dimension(mart,0:maxyr,mseas), intent(inout) ::  tactemp
+    !! In and out arguments
     real, dimension (mart,0:maxyr,mseas,maxl), intent(inout) :: rn
-
-    ! General variables
+    real, dimension(mart,0:maxyr,mseas), intent(inout) ::  tactemp
     integer, intent(in) :: mart, maxyr, mseas, maxl
     real, dimension(1:mart,1:4), intent(in) :: speclen
     real, dimension(1:mart,0:maxyr,10), intent(in) :: bioparam1
@@ -419,7 +409,7 @@ contains
     real, dimension(1:mart,0:maxyr,1:mseas,maxl,3), intent(in) :: bioparam3
     real, dimension(1:mart,22), intent(in) :: options
 
-    ! Local variables
+    !! Local variables
     integer :: depletflag, iart, iy, iseas, initseas, iseasstart, i
     real, dimension (mart,0:maxyr) :: ssb(mart,0:maxyr)
    
@@ -464,14 +454,16 @@ contains
   end subroutine dproject
 
   subroutine drecruit(iart,iy,rn,ssb,mart,maxyr,mseas,maxl,speclen,bioparam1)
-    ! In and out arguments
+    !! drecruit calculates recruitment from stock-recruitment function (without random error)
+    
+    !! In and out arguments
     integer, intent(in) :: iart, iy, mart, maxyr, mseas, maxl
     real, dimension(mart,0:maxyr,mseas,maxl), intent(inout) :: rn
     real, dimension(mart,0:maxyr), intent(in) :: ssb
     real, dimension(mart,1:4), intent(in) :: speclen
     real, dimension(mart,0:maxyr,10), intent(in) :: bioparam1
     
-    ! Local
+    !! Local variables
     real, dimension (maxl) :: rnew
     real :: a, b, cumnorm, fract, float, x, fractprev, rall, sigma
     integer :: ifunc, lkl, i, iseas, nlend, nlstart, lklend, lklstart, grlen
@@ -491,7 +483,7 @@ contains
       ! Ricker
       rall = a * ssb(iart,iy) / b * exp(1.0 - ssb(iart,iy) / b)
     else
-      write(*,*) 'Warning: Invalid recruitment function'
+      write(*,*) 'Warning: Invalid recruitment function - recruitment set to 0.0'
       rall = 0.0
     end if
     
@@ -531,6 +523,8 @@ contains
   end subroutine drecruit
 
   subroutine dgetssb(iart,iy,rn,ssb,mart,maxyr,mseas,maxl,speclen,bioparam1,bioparam3)
+    !! dgetssb calculates the spawning biomass as biomass (numbers * weight) that are mature
+
     !! In and out arguments
     integer, intent(in) :: iart, iy, mart, maxyr, mseas, maxl
     real, dimension(mart,0:maxyr,mseas,maxl), intent(in) :: rn
@@ -541,8 +535,6 @@ contains
     
     !! Local variables
     integer :: lklstart, lklend, iseas, lkl
-  
-    !! Local variables - outputs of dgetweight and dgetmatur
     real, dimension(maxl) :: weight, rmat
   
     lklstart = int(speclen(iart,2))
@@ -559,7 +551,7 @@ contains
   end subroutine dgetssb
 
   subroutine dgettsb(iart,iy,iseas,rn,tsb,mart,maxyr,mseas,maxl,speclen,bioparam3)
-    !! TSB is calculated for each season as the biomass of fish above a certain length
+    !! dgettsb calculates TSB for each season as the biomass of fish above a certain length
     
     !! In and out arguments
     integer, intent(in) :: iart, iy, iseas, mart, maxyr, mseas, maxl
@@ -834,7 +826,7 @@ contains
       else
         ! trend (only if the two years are different)
         if (iydesc2 .le. iydesc1) then
-          write(*,*) 'Warning: You ask for a trend over only one year'
+          write(*,*) 'Error: You ask for a trend over only one year'
           stop
         end if
         
@@ -864,5 +856,233 @@ contains
       end if
     end do  ! end loop over reference points
   end subroutine dgetdecbasis
+
+  subroutine drule(mart,decbasis,v,options)
+    !! drule is the function for the harvest control rule
+
+    !! In and out arguments
+    integer, intent(in) :: mart
+    real, dimension(mart,2), intent(in) :: decbasis
+    real, dimension(mart), intent(out) :: v
+    real, dimension(mart,22), intent(in) :: options
+
+    !! Local variables
+    integer :: iart
+    real :: vstd, alfa, grense1, grense2, basis1, basis2, rat, grense3
+   
+    do iart = 1, mart
+      vstd = options(iart,17)
+      alfa = options(iart,18)
+      grense1 = options(iart,14)
+      grense2 = options(iart,15)
+      grense3 = options(iart,22)
+      basis1 = decbasis(iart,1)
+      basis2 = decbasis(iart,2)
+    
+      if (basis1 .le. grense1) then
+        v(iart) = vstd
+      else
+        if(basis2 .gt. grense3 .and. basis1 .gt. grense2) then
+          v(iart) = (((basis2-grense3) / grense3) * alfa) + alfa
+        else if(basis1 .ge. grense2) then
+          v(iart) = alfa
+        else
+          rat = (basis1 - grense1) / (grense2 - grense1) 
+          v(iart) = (rat * alfa) + ((1 - rat) * vstd)
+        end if
+      end if
+    end do
+  end subroutine drule
+
+  subroutine dtranslate(rn,tactemp,v,mart,maxyr,mseas,maxl,speclen,bioparam2,bioparam3,options,seastac)
+    !! dtranslate 'translates' the outcome of the harvest control rule (in drule) to TAC and stores in tactemp.
+    !! Called for all species and in all years
+
+    !! In and out arguments
+    real, dimension(mart,0:maxyr,mseas,maxl), intent(in) :: rn
+    real, dimension(mart,0:maxyr,mseas), intent(out) :: tactemp
+    real, dimension(mart), intent(in) :: v
+    integer, intent(in) :: mart, maxyr, mseas, maxl
+    real, dimension(1:mart,1:4), intent(in) :: speclen
+    real, dimension(1:mart,0:maxyr,1:mseas,1:4,2), intent(in) :: bioparam2
+    real, dimension(1:mart,0:maxyr,1:mseas,maxl,3), intent(in) :: bioparam3
+    real, dimension(1:mart,22), intent(in) :: options
+    real, dimension(1:mart,1:mseas), intent(in) :: seastac
+    
+    !! Local variables
+    integer :: iart, iy, iseas, instrument, lklstart, lklend, lkl
+    real :: csum, fl, z, cnow
+    real, dimension (maxl) :: sel, weight
+   
+    do iart = 1, mart
+      instrument = int(options(iart,16))
+      lklstart = int(speclen(iart,2))
+      lklend = int(speclen(iart,3))
+
+      ! Basic rule, applies to year 1, but we assume the same v further if asked for
+      do iy = 1, maxyr
+        if (instrument .eq. 1) then
+          ! F-rule
+          do iseas = 1, mseas 
+            csum = 0.0
+            
+            call dgetselect(iart,iy,iseas,sel,mart,maxyr,mseas,maxl,speclen,bioparam2)
+            call dgetweight(iart,iy,iseas,weight,mart,maxyr,mseas,maxl,speclen,bioparam3)                      
+        
+            do lkl = lklstart, lklend
+              fl = sel(lkl) * v(iart) * seastac(iart,iseas)
+
+              !! JTT: Here and elsehwhere, should float() conversion be used?
+              z = (bioparam3(iart,iy,iseas,lkl,1) / float(mseas)) + fl
+
+              if (rn(iart,iy,iseas,lkl) .gt. 0.0) then
+                cnow = rn(iart,iy,iseas,lkl) * fl / z * (1.0 - exp(-z))
+                csum = csum + cnow * weight(lkl)
+              end if
+            end do
+            
+            tactemp(iart,iy,iseas) = csum
+          end do
+        else if (instrument .eq. 2) then
+          ! TAC rule
+          do iseas = 1, mseas
+            tactemp(iart,iy,iseas) = v(iart) * seastac(iart,iseas)
+          end do
+        else if (instrument .eq. 3) then
+          ! HR rule
+          do iseas = 1, mseas
+            csum = 0.0
+            do lkl = lklstart, lklend
+              csum = csum + rn(iart,iy,iseas,lkl) * v(iart) * weight(lkl) * seastac(iart,iseas)
+            end do
+            tactemp(iart,iy,iseas) = csum
+          end do
+        else
+          !! If 'instrument' not defined or improperly specified...
+          write(*,*) 'Error: Non-existing harvest rule instrument'
+          stop
+        end if
+      end do
+    end do
+  end subroutine dtranslate
+
+  subroutine dmodifytac(tactemp,mart,maxyr,mseas,options)
+    !! dmodifytac scales the TAC from tactemp (from dtranslate), and places it back into tactemp.
+    !! JTT: How is scaling factor calculated? Find & write out...
+
+    !! In and out arguments
+    real, dimension(mart,0:maxyr,mseas), intent(inout) :: tactemp
+    integer, intent(in) :: mart, maxyr, mseas
+    real, dimension(1:mart,22), intent(in) :: options
+
+    !! Local variables
+    integer :: iart, iy, iseas
+    real :: demp, summ, faktor
+    
+    !! Damping rule & summing up annual TAC
+    do iart = 1, mart
+      demp = options(iart,21)
+      if (demp .gt. 0.0) then
+        do iy = 1, maxyr
+          summ = 0.0
+          do iseas = 1, mseas
+            tactemp(iart,iy,iseas) = demp * tactemp(iart,iy - 1,iseas) + (1.0 - demp) * tactemp(iart,iy,iseas)
+            summ = summ + tactemp(iart,iy,iseas)
+          end do
+        
+          ! Max and min
+          if (summ .lt. options(iart,19)) then
+            faktor = options(iart,19) / summ
+          else if (summ .gt. options(iart,20)) then
+            faktor = options(iart,20) / summ
+          else
+            faktor = 1.0
+          end if
+        
+          do iseas = 1, mseas
+            tactemp(iart,iy,iseas) = tactemp(iart,iy,iseas) * faktor
+          end do
+        end do
+      end if
+    end do
+  end subroutine dmodifytac
+
+  subroutine dgetselect(iart,iy,iseas,sel,mart,maxyr,mseas,maxl,speclen,bioparam2)
+    !! dgetseleect calculates selection at length as a logistic function
+
+    !! In and out arguments
+    integer, intent(in) :: iart, iy, iseas, mart, maxyr, mseas, maxl
+    real, dimension(maxl), intent(out) :: sel
+    real, dimension(mart,1:4), intent(in) :: speclen
+    real, dimension(mart,0:maxyr,mseas,4,2), intent(in) :: bioparam2
+    
+    !! Local variables
+    integer :: lkl, lklstart, lklend
+    real :: dl, rl50, sl, actlen
+  
+    lklstart = int(speclen(iart,2))
+    lklend = int(speclen(iart,3))
+    dl = speclen(iart,1)
+    rl50 = bioparam2(iart,iy,iseas,3,1)
+    sl = bioparam2(iart,iy,iseas,4,1)
+  
+    do lkl = lklstart, lklend
+      actlen = (float(lkl) + 0.5) / dl
+      sel(lkl) = 1.0 / (1.0 + exp(-4.0 * sl * (actlen - rl50)))
+    end do
+  end subroutine dgetselect
+
+  subroutine dgetmatur(iart,iy,rmat,mart,maxyr,maxl,speclen,bioparam1)
+    !! Calculates maturity at length as a logistic function
+
+    !! In and out arguments
+    integer, intent(in) :: iart, iy, mart, maxyr, maxl
+    real, dimension(maxl), intent(out) :: rmat
+    real , dimension(mart,1:4), intent(in) :: speclen
+    real, dimension(mart,0:maxyr,10), intent(in) :: bioparam1
+
+    !! Local variables
+    integer :: lkl, lklstart, lklend
+    real :: dl, rl50, sl, actlen
+
+    lklstart = int(speclen(iart,2))
+    lklend = int(speclen(iart,3))
+    dl = speclen(iart,1)
+    rl50 = bioparam1(iart,iy,6)
+    sl = bioparam1(iart,iy,7)
+
+    do lkl = lklstart, lklend
+      actlen = (float(lkl) + 0.5) / dl
+      rmat(lkl) = 1.0 / (1.0 + exp(-4.0 * sl * (actlen - rl50)))
+    end do
+  end subroutine dgetmatur
+
+  subroutine dgetweight(iart,iy,iseas,weight,mart,maxyr,mseas,maxl,speclen,bioparam3)
+    !! Calculates weight at length based on power function
+
+    !! In and out arguments
+    integer, intent(in) :: iart, iy, iseas, mart, maxyr, mseas, maxl
+    real, dimension(maxl), intent(out) :: weight
+    real, dimension(mart,1:4), intent(in) :: speclen
+    real, dimension(mart,0:maxyr,mseas,maxl,3), intent(in) :: bioparam3
+  
+    !! Local variables
+    integer :: lkl, lklstart, lklend
+    real :: cond, dl, actlen
+  
+    do lkl = 1, maxl
+      weight(lkl) = 0.0
+    end do
+  
+    lklstart = int(speclen(iart,2))
+    lklend = int(speclen(iart,3))
+    dl = speclen(iart,1)
+    
+    do lkl = lklstart, lklend
+      cond = bioparam3(iart,iy,iseas,lkl,2)
+      actlen = (float(lkl) + 0.5) / dl
+      weight(lkl) = cond * actlen ** bioparam3(iart,iy,iseas,lkl,3)
+    end do
+  end subroutine dgetweight
 
 end module enac_decision_model
