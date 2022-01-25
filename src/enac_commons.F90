@@ -22,6 +22,7 @@ module enac_commons
     integer, parameter :: maxenvvariables = 3
     integer, parameter :: maxregimes = 3
     integer, parameter :: maxyear2 = 1
+    integer, parameter :: maxtacyr = 2
 
     ! Species names
     character(len=50) :: species_name(maxspec)
