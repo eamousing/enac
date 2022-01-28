@@ -41,14 +41,17 @@ contains
 
     subroutine read_line(unit, line, io_status)
         !! Reads a line from a file, skipping comments and blank lines
-        !!
         !! Original code by Bjørn Ådlandsvik, IMR, 1997
+
+        !! In and out arguments
         integer, intent(in) :: unit !! File unit 
         character(len=*), intent(out) :: line !! Read character string
         integer, intent(out) :: io_status
 
+        !! Local variables
         character(len=*), parameter :: comchar = "*!#" ! Comment characters
         integer :: ipos
+
         do
             read(unit, "(a)", iostat=io_status) line
             if (io_status .ne. 0) exit
@@ -73,7 +76,7 @@ contains
         ! Skip header line
         read(10, '(a1)') dummy
         do
-            read(10, *, iostat=io) i,j,k,stdparameters(i,j,k,1), stdparameters(i,j,k,2)
+            read(10, *, iostat=io) i, j, k, stdparameters(i,j,k,1), stdparameters(i,j,k,2)
             if (io .ne. 0) exit
         end do
         close(10)
@@ -155,7 +158,7 @@ contains
 
         open(10, file="in/"//"biobyage.txt")
         do
-            call read_line(10, string, io); read(string,*) i,j,k,bio_opt(i,j,k)
+            call read_line(10, string, io); read(string,*) i, j, k, bio_opt(i,j,k)
             if (i .eq. nspec .and. j .eq. 3 .and. k .eq. 3) exit
         end do
         do
@@ -187,15 +190,73 @@ contains
         do 
             call read_line(10, string, io)
             if (io .ne. 0) exit
-            read(string,*) i,j,varenv1(i,j,1)
+            read(string,*) i, j, varenv1(i,j,1)
         end do
         close(10)
-
-        ! NOTE(EAM): I have no idea what the comment below means?
-        !!!!!!!!!!!!!
-        ! For the time being - managers know the real environment - should be corrupted
+        
+        !! Index 1 of 3rd dimension is true value. Index 2 is value perceived by management 
+        !! Below assumes management has perfect knowledge of environmental factor (in envfile)
+        !! If environmental factor is incorporated, this varenv1(,,2) should have error
+        !! Currently, varenv1 is only used within r_link_test procedure (enac_links) to specify recruitment regimes
         varenv1(i,j,2) = varenv1(i,j,1)
-        !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     end subroutine envinput
+
+    subroutine ruleinput()
+        !! Reads in 'optinn' which contain input to management rules
+        
+        integer :: i, j
+        character(len=100) :: string
+        
+        manage_opt = -999.0
+        open (10, file='in/'//'optinn', form='formatted')
+        do
+            call read_line(10, string, io)
+            if (io .ne. 0) exit
+            read(string,*) i, j, manage_opt(i,j)
+        end do
+        close(10)
+        
+        !! Initial value should be 1; if not, set to 1 here
+        !! (JTT: Rewrote original comment from Norwegian, but do not know what this means)
+        do i = 1, nspec
+            if (manage_opt(i,1) .ne. 1) then
+                write(*,*) 'Management option 1 should have value 1'
+                write(*,*) 'Setting manage_opt(', i, ',1) = 1 ...'
+                manage_opt(i,1) = 1
+            end if
+        end do
+    end subroutine ruleinput
+
+    subroutine statein()
+        !! TODO: Write description
+        integer :: o, p, i 
+ 
+        open (10, file='in/'//'lenvekt.txt')
+
+        do o = 1, 3
+            read(10,*) (mlengths(o,i), i=1, 14)
+        end do
+        
+        do p = 1, 3
+            read(10,*) (mweights(p,i), i=1, 14)
+        end do
+    end subroutine statein
+
+    subroutine output()
+        integer :: i, j, k
+
+        do j = 1, nyear
+            write(11,*) iter, j, (tac(i,j),i=1,nspec)
+            write(13,*) iter, j, (ssb(i,j),i=1,nspec)
+        end do
+
+        do i = 1, nspec
+            do j = 1, nyear
+                do k = 1, (maxage+1)
+                    write(14,*) iter, j, i, k-1, natage(i,j,k), catage(i,j,k)
+                end do
+            end do
+        end do
+    end subroutine output
 
 end module enac_inout
