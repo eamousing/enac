@@ -189,7 +189,7 @@ contains
             ! Final nummber, never negative
         end do
       
-        r1 = max(xm*r0,0.0)       
+        r1 = max(xm * r0,0.0)       
       
         if (link_parameters(species,3,1) .eq. 1 .and. year .gt. 0 .and. species .eq. 3) then 
             if (year.eq.1) open(67, file='Out/'//'Mac_vs_Her.txt')
@@ -206,7 +206,7 @@ contains
         r1_out(species) = r1
         reg_out(species) = regime
              
-        if (species.eq.maxspec.and.year.gt.0) then
+        if (species .eq. maxspec .and. year .gt. 0) then
             !write(*,*) 'year',year, 'R',r1_out
             write(31,*) iter,year,r1_out,reg_out !,ssb(:,year)
             write(32,*) iter,year,rec_res(:,year),reg_out
@@ -215,8 +215,5 @@ contains
 1       format(181(f10.1,x)) ! EAM: Unused, remove?
       
     end subroutine getnrecruits
-
-    
-
 
 end module enac_superindividuals

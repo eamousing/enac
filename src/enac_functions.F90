@@ -131,7 +131,7 @@ contains
         res = 0.5 * sqrt(1.0 - res / 30.0)
         
         if (x .lt. 0.0) then
-            res =0.5 - res
+            res = 0.5 - res
         else
             res = res + 0.5
         endif
@@ -147,10 +147,10 @@ contains
         
         real :: t, sg
         if (r .gt. 0.5) then
-            t = sqrt(log((1.0 / (r - 0.5))**2))
+            t = sqrt(log((1.0 / (r - 0.5)) ** 2))
             sg = 1.0
         else if (r .lt. 0.5) then
-            t = sqrt(log((1.0 / (r - 0.5))**2))
+            t = sqrt(log((1.0 / (r - 0.5)) ** 2))
             sg = -1.0
         else
             sg = 0.0
@@ -163,11 +163,11 @@ contains
         !! (EAM): Not sure if this is supposed to overwrite rintvar in enax_commons
         !! and I have therefore not updated the structure. 
         !! TODO: Check the intentions of this function before refactoring.
-        real(dp) :: rintvar,drn
-        rintvar=rintvar*23.0_8
-        rintvar=dmod(rintvar,100000001.0_8)
-        drn=rintvar/100000001.0_8
-        rnx =sngl(drn)
+        real(dp) :: rintvar, drn
+        rintvar = rintvar * 23.0_8
+        rintvar = dmod(rintvar,100000001.0_8)
+        drn = rintvar / 100000001.0_8
+        rnx = sngl(drn)
     end function rnx
 
     subroutine creategeo(geodist, rintv, maxyr)
@@ -187,7 +187,7 @@ contains
             flii = float(i) - 1.0
             px = px + pr * exp(flii * log(1.0 - pr))
             geodist(i) = px
-        enddo
+        end do
     end subroutine creategeo
 
     function rand_normal(mean, stdev) result(c)
@@ -200,14 +200,14 @@ contains
         real :: c
         
         real :: temp(2)
-        real :: pi=3.141592653589793238462
+        real :: pi = 3.141592653589793238462
         real :: r, theta
     
         if (stdev .le. 0.) then
             write(*,*) "Standard Deviation must be +ve"
         else
             call random_number(temp)
-            r = (-2.0 * log(temp(1)))**0.5
+            r = (-2.0 * log(temp(1))) ** 0.5
             theta = 2.0 * pi * temp(2)
             c = mean + stdev * r * sin(theta)
         end if

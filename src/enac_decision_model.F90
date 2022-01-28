@@ -23,7 +23,7 @@ contains
   subroutine decision_model(maxtacyr, maxspec, maxtimestep, maxlkl, dectac, ntacyr)
     !! In and out arguments
     integer, intent(in) :: maxtacyr, maxspec, maxtimestep, maxlkl
-    real, dimension (1:maxspec, 0:maxtacyr), intent(out) :: dectac
+    real, dimension(1:maxspec, 0:maxtacyr), intent(out) :: dectac
     integer, intent(out) :: ntacyr
 
     ! transferred variables
