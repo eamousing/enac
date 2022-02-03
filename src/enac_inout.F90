@@ -1,6 +1,7 @@
 module enac_inout
 
     use enac_commons
+    use enac_functions
 
     implicit none
 
@@ -258,5 +259,355 @@ contains
             end do
         end do
     end subroutine output
+
+    subroutine sistateout()
+        integer :: species, i, j, k, nsitemp, nsitem
+        real :: a(maxspec,8,nyear + 20 + 1), su2, su1(100) 
+       
+        1 format(181(f10.2,x))
+        do species = 1, maxspec
+            nsitemp = int(nsi2(species) * 0.01)
+            do i = 1, nsitemp 
+                do j = 1, 8
+                    do k = 1, 100
+                        su1(k) = sistate(species,((i - 1) * 100) + k,j)
+                        if (j == 4) su1(k) = su1(k) * 1000 
+                    end do
+                    
+                    su2 = sum(su1)
+                    
+                    if (su2 .gt. 0) then
+                        a(species,j,i) = su2 / nsiperyear(species) 
+                    else
+                        a(species,j,i) = 0.
+                    end if
+                end do  
+            end do
+        
+            do j = 1, 8
+                if(species .eq. 1) write(15,1) (a(species,j,i), i = 1, nsitemp)
+                if(species .eq. 2) write(16,1) (a(species,j,i), i = 1, nsitemp)
+                if(species .eq. 3) write(17,1) (a(species,j,i), i = 1, nsitemp)
+            end do
+        
+            if(species .eq. 1) write(15, *) 
+            if(species .eq. 2) write(16, *)
+            if(species .eq. 3) write(17, *)
+       end do
+    end subroutine sistateout
+
+    subroutine mort_mat_out()
+        integer	:: i, j
+        real :: length, mlow, mhigh, l1_50, l2_50, slope1, slope2, m
+        real :: ma(5:45)
+        
+        do i = 1, maxspec
+            do j = 5, 45
+                length = j * 1.
+                mlow = siparam(i,1,5,1,1)
+                mhigh = siparam(i,1,5,2,1)
+                l1_50 = siparam(i,1,5,3,1)
+                l2_50 = siparam(i,1,5,4,1)
+                slope1 = siparam(i,1,5,5,1)
+                slope2 = siparam(i,1,5,6,1)
+                call comblog(mlow,mhigh,l1_50,slope1,l2_50,slope2,length,m)
+                ma(j) = m
+            end do
+            write(23,'(2I4,181F10.2)') iter, i, ma
+        end do   
+    end subroutine mort_mat_out
+
+    subroutine outstate()
+        integer :: i, age
+        real :: mweight0, mlength0
+        real, dimension(14) :: outweight, outlength
+       
+        if (year .gt. 0) then
+            do species = 1, maxspec
+                do i = (nsi2(species) / 100 - 14), (nsi2(species) / 100 - 1)
+                    age = int(sistate(species,1 + (i * 100), 2))
+                    mweight0 = sum(sistate(species,(1 + (i * 100)):(99 + (i * 100)),4)) / 100
+                    mlength0 = sum(sistate(species,(1+(i*100)):(99+(i*100)),3))/100
+                    outweight(age) = mweight0
+                    outlength(age) = mlength0  
+                end do
+
+                if (species .eq. 1) then
+                    write(41, '(2I4,14F6.3)') iter, year, outweight
+                    write(44, '(2I4,14F6.2)') iter, year, outlength
+                end if
+
+                if (species .eq. 2) then
+                    write(42, '(2I4,14F6.3)') iter, year, outweight
+                    write(45, '(2I4,14F6.2)') iter, year, outlength
+                end if
+
+                if(species .eq. 3) then
+                    write(43, '(2I4,14F6.3)') iter, year, outweight
+                    write(46, '(2I4,14F6.2)') iter, year, outlength
+                end if
+            end do
+        end if
+    end subroutine outstate
+
+    subroutine setup_recruits()
+        !! setup_recruits specifically sets up regimes and spasmodic recruitment.
+        !! This includes randomization routines to determine when these occur, and to what extent.
+        !! Outputs nregact(species,year), the regime index in year, and ispasm(species,year), years with spasmodic recruitment.
+
+        !! TODO: Write intents!
+        real, dimension(0:maxyear) :: geodist
+        real :: x, rinterval, rintvcv, ri, flii, pr, px, rilast, spasmfct, xsi
+        integer :: ishift, i, j, k, ii, iy, nn, ifirst, ilast, lastspasm, ioptspasm, p
+         
+        do species = 1, nspec
+            ! Set up regime shifts      
+            if (nregimes(species) .le. 1) then
+                ! case no regimeshifts
+                do year = -maxage, nyear
+                    nregact(species,year) = 1
+                end do
+            else
+                ! nregimes >1
+                ! Set up sequence of regimes for recruitment
+                ! If icodeshift=1, listreg is ready from input
+                ! If icodeshift=2, listreg is set up here      
+                if (icodeshift(species) .eq. 2 .or. icodeshift(species) .eq. 3) then   
+                    call creategeo(geodist,regintv(species),nyear)
+                    listreg(species,1) = 1
+                    ishift = lastreg(species)
+                    nn = 1
+
+                    ! Find next shift
+                    do
+                        x = rnx(rintvar)
+                        ii = 1
+                        do
+                            ii = ii + 1
+                            if (geodist(ii) .ge. x) exit
+                            
+                            if (ii .lt. nyear) then 
+                                cycle
+                            else
+                                exit
+                            end if
+                        end do
+                        
+                        ishift = ishift + ii
+
+                        if (ishift .gt. 0 .and. ishift .le. nyear .and. nn .le. nyear) then
+                            nn = nn + 1
+                            listreg(species,nn) = ishift
+                        end if
+
+                        if (ishift .lt. nyear) then 
+                            cycle
+                        else
+                            exit
+                        end if
+                    end do
+
+                    listreg(species,nn+1) = nyear 
+                else 
+                    ! icodeshift not 1        
+                    if (icodeshift(species) .ne. 1) then
+                        write(*,*) 'Error: Incomprehensible code for regime shift', species, icodeshift(species)
+                        stop
+                    end if 
+                end if
+            end if
+        
+            ! Known shift years are now in listreg (fixed or derived from flex model)
+            ! Set up nregact: Regime by year from listreg
+            ! Always start with regime 1, so prime nregact with that
+            do i = -maxage, nyear
+                nregact(species,i) = 1 
+            end do  
+          
+            if (nregimes(species) .gt. 1) then
+                j = 1
+                ! for each regime block, define the years
+                ! The last entry on listreg shall be nyear
+                do
+                    j = j + 1
+                    ifirst = listreg(species,j)
+                    ilast = listreg(species,j+1) - 1
+                    
+                    if (listreg(species,j+1) .eq. nyear) ilast = nyear
+            
+                    ! Then, find the regime number k for those years
+                    ! icodeshift = 2 is for random regimes
+                    if (icodeshift(species) .eq. 2) then
+                        ! Find which regime k in this interval, each is equally likely
+                        x = rnx(rintvar)
+                        x = x * float(nregimes(species))
+                        k = int(x) + 1
+
+                    ! icodeshift = 1 or 3 
+                    else
+                        k = j
+                    end if
+            
+                    do iy = ifirst, ilast
+                        nregact(species,iy) = k
+                    end do
+                    
+                    !  end loop over regimes
+                    if (ilast .lt. nyear) then
+                        cycle
+                    else 
+                        exit
+                    end if
+                end do
+            end if
+        
+            ! Set up the sequence of spasmodic recruitment successes.  
+            do i = -nage(species), nyear
+               ispasm(species,i) = 0
+            end do
+        
+            if(icodeshift(species) .lt. 3) then
+                ! set up spasmodic years for each regime
+                do k = 1, nregimes(species)
+                    rinterval = recruit_parameters(species,k,13,1)
+                    rintvcv = recruit_parameters(species,k,14,1)
+                    spasmfct = recruit_parameters(species,k,15,1)
+                    
+                    if (k .eq. 1) then
+                        ifirst = 0
+                    else
+                        ifirst = listreg(species,k)
+                    end if
+                
+                    if (k.eq.nregimes(species)) then
+                        ilast=nyear
+                    else
+                        ilast=listreg(species,k+1)
+                    end if
+                
+                    lastspasm = ifirst + int(recruit_parameters(species,k,16,1))
+                
+                    if (rinterval .gt. 1.0 .and. spasmfct .gt. 1.0) then
+                        ! only if the interval and spasmodic factor is greater than 1, 
+                        ! if not, no such effects are assumed
+                        ioptspasm = int(recruit_parameters(species,k,12,1))		
+            
+                        if (ioptspasm .eq. 1) then
+                            ! case spasms with random intervals
+                            rilast = float(lastspasm)
+
+                            do
+                                x = rnx(rintvar)
+                                xsi = snrn(x)
+                                ri = rinterval * exp(rintvcv * xsi) + rilast
+                                j = int(ri + 0.5)
+                                
+                                if (j .le. ilast .and. j .ge. ifirst) then
+                                    ! Note: The spasmodic years start in lastspasm
+                                    ! Years prior to year 0 only matter when priming the stock.
+                                    ! Else, earlier years are only used to propagate the sequence. 
+                                    ispasm(species,j) = 1
+                                    rilast = ri
+                                    cycle
+                                else
+                                    exit
+                                end if
+                            end do     
+                        else if (ioptspasm .eq. 2) then
+                            pr = 1.0 / rinterval
+                            ilast = lastspasm
+
+                            do
+                                x = rnx(rintvar)
+                                ii = 0
+                                px = 0.0
+
+                                do
+                                    ii = ii + 1
+                                    flii = float(ii) - 1.0
+                                    px = px + pr * exp(flii * log(1.0 - pr))
+                                    
+                                    if (px .ge. x) then
+                                        exit
+                                    else 
+                                        if (ii .lt. nyear) then
+                                            cycle
+                                        else
+                                            exit
+                                        end if
+                                    end if
+                                end do
+
+                                j = ii + ilast
+                                ilast = j   
+                                
+                                if (j .le. ilast .and. j .ge. ifirst) then
+                                    ! Note: The spasmodic years start in lastspasm
+                                    ! Years prior to year 0 only matter when priming the stock.
+                                    ! Else, earlier years are only used to propagate the sequence. 
+                                    ispasm(species,j) = 1
+                                    cycle
+                                else
+                                    exit
+                                end if
+                            end do
+                        else if (ioptspasm .eq. 3) then
+                            ! Flat distribution between rinterval*(1-cv,1+cv)
+                            ilast = lastspasm
+
+                            do
+                                x = rnx(rintvar)
+                                x = rinterval + ((x - 0.5) * rintvcv * 2)
+                                ii = int(x + 0.5) + ilast
+
+                                if (ii .lt. nyear) then
+                                    if (ii .ge. -nage(species)) ispasm(species,ii) = 1
+                                    ilast = ii
+                                    cycle
+                                else
+                                    exit
+                                end if
+                            end do
+                        end if
+                    end if  ! end if spasmodic recruitments
+                end do  ! end regimes loop
+            else  ! icodeshift = 3 
+                do p = 1, nregimes(species) 
+                    nregact(species,iy) = p
+                    rinterval = recruit_parameters(species,p,13,1)
+                    rintvcv = recruit_parameters(species,p,14,1)
+                    spasmfct = recruit_parameters(species,p,15,1)
+                    ioptspasm = int(recruit_parameters(species,p,12,1))
+                    ilast = recruit_parameters(species,p,16,1)
+                    
+                    do
+                        x = rnx(rintvar)
+                        x = rinterval + ((x - 0.5) * rintvcv * 2)
+                        ii = int(x + 0.5) + ilast
+                        if (ii .lt. nyear) then
+                            if (ii .ge. -nage(species)) spasm(species,p,ii) = 1
+                            ilast = ii
+                            cycle
+                        else
+                            exit
+                        end if
+                    end do
+                end do
+            end if  ! end if icodeshift = 1, 2 or 3
+        end do  ! end species loop
+    end subroutine setup_recruits
+        
+    !subroutine fixrec
+    ! integer	:: o,i,test
+    
+    ! test=10001
+    
+    ! open(test, file = 'In/'//'rec.txt')
+    
+    ! 	do o = 1,45
+    !	 read(test,*)(rec_in(o,i),i=1,3)
+    !	enddo
+    
+    !end subroutine fixrec
 
 end module enac_inout
