@@ -2,6 +2,7 @@ module enac_update_pop
 
     use enac_commons
     use enac_functions
+    use enac_get_calcs
 
     implicit none
 
@@ -82,21 +83,16 @@ contains
     subroutine grow_and_mature()
         !! Increases length of all SIs for the species in the year and season
         !! Updates weight
-        real :: deltat, deltal, lastlen, mod1, mod2, pm, rx, rnx, biomass
+        real :: deltat, deltal, lastlen, mod1, mod2, pm, rx, biomass
         integer :: si, a1, a2, a3
       
         deltat = 1.0 / float(ntimestep)
         do si = nsistart(species), nsi2(species)
             !if(sistate(species,si,2).ge.nage(species)) sistate(species,si,1)=0.0
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      
-            if (species .eq. 3 .and. sistate(species,si,3) .gt. 32) then
-                call vonbert(siparam(species,si,1,1,2),siparam(species,si,1,2,2),sistate(species,si,3),deltat,deltal)
-            else
-                call vonbert(siparam(species,si,1,1,2),siparam(species,si,1,2,2),sistate(species,si,3),deltat,deltal)
-                !call vonbert2(siparam(species,si,1,1,2),siparam(species,si,1,2,2),sistate(species,si,3),deltat,siparam(species,si,1,3,2),deltal) 
-            endif
-            !if(year.gt.0.and.species.eq.3) print *, species,deltal,siparam(species,si,1,2,2),sistate(species,si,2)
+            
+            call vonbert2(siparam(species,si,1,1,2),siparam(species,si,1,2,2),sistate(species,si,3), &
+                 deltat,siparam(species,si,1,3,2),deltal)
       
             lastlen = sistate(species,si,3) 
             sistate(species,si,3) = lastlen + deltal

@@ -18,8 +18,9 @@ contains
 
         real :: eps, eps1
 
-        eps1 = exp(epsi)**0.5
-        eps = rand_normal(0.0, eps1)
+        eps1 = exp(epsi) ** 0.5
+        eps = 0.0
+        if (eps1 .gt. 0.) eps = rand_normal(0.0, eps1)
 
         deltal = (rlinf - rl) * (1.0 - exp(-rk * deltat)) + eps 
         if (deltal .lt. 0.0) deltal=0.0

@@ -1,6 +1,7 @@
 module enac_superindividuals
 
     use enac_commons
+    use enac_functions
 
     implicit none
 
@@ -21,7 +22,7 @@ contains
         !! Fills in, for each SI that is generated, the sistandard table, with
         !! standard parameters. 
         integer :: i, j, k, regime
-        real :: rx, r1, xsi, rancum, rnx, snrn
+        real :: rx, r1, xsi, rancum
       
         ! identify SIs that recruit this year, incl. update nsi2: the highest SI number
         nsi2(species) = nsi2(species) + nsiperyear(species)
@@ -82,7 +83,7 @@ contains
 
     subroutine getnrecruits(r1)
         ! Get the total number of recruits for the current species in the current year in r1
-        real :: r0, r1, a, b, sigma, rho, rx, xsi, rnx, snrn
+        real :: r0, r1, a, b, sigma, rho, rx, xsi
         real :: amplitude, period, phase, xm, trunchigh, trunclow
         integer :: isrfunc, distribution, regime, trunc_type, i
       

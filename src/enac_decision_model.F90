@@ -376,7 +376,7 @@ contains
         
     !! Local variables
     integer :: iart, iseas, lklstart, lklend, lkl
-    real :: sigma, rx, xsi, rnx
+    real :: sigma, rx, xsi
   
     ! Calculate noisy initial stock numbers
     do iart = 1, mart
@@ -462,7 +462,7 @@ contains
     
     !! Local variables
     real, dimension (maxl) :: rnew
-    real :: a, b, cumnorm, fract, float, x, fractprev, rall, sigma
+    real :: a, b, fract, float, x, fractprev, rall, sigma
     integer :: ifunc, lkl, i, iseas, nlend, nlstart, lklend, lklstart, grlen
     
     ifunc = int(bioparam1(iart,iy,8))

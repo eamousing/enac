@@ -2,6 +2,7 @@ module enac_links
 
     use enac_commons
     use enac_functions
+    use enac_get_calcs
 
     implicit none
 
@@ -231,7 +232,10 @@ contains
                     !if(si==nsistart(species))print *, siparam(species,si,1,2,2),log(biomass) 
                 end if
                 
-                siparam(species,si,1,3,2) = var
+                !! JTT (03.02.21): Above, var is expontiated and raised to half power as input for sigma (in random normal)
+                !!                 I presume below (original is commented) is an error, and have used eps1 instead (?)
+                !! siparam(species,si,1,3,2) = var
+                siparam(species,si,1,3,2) = eps1
       
                 !for decmodul (decparam)
                 if(species .eq. 3) decp(species,1) = exp(K_a_juv + K_b_juv * log(jsb)) !juvenil K
@@ -239,7 +243,10 @@ contains
                 if(species .eq. 2) decp(species,2) = exp(K_a + K_b * sum(biomass(2:3)))     !voksen K  
                 if(species .eq. 1) decp(species,2) = exp(K_a + K_b * biomass(1))
                 if(species .eq. 3) decp(species,2) = exp(K_a + K_b * log(biomass(species)))     !voksen K  
-                decp(species,3) =  var                             !var 
+                
+                !! JTT (03.02.21): Same as above - use eps1 instead
+                !! decp(species,3) =  var 
+                decp(species,3) = eps1
             end do 
         end if !season eq 1
     end subroutine linkfunction_1

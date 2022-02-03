@@ -27,27 +27,27 @@ program enac
 
     !! Create files for output
     !! JTT: A better way to do this? More descriptive file names?
-    open (13,file='Out/'//'SSB.txt')
-    open (11,file='Out/'//'TAC.txt')
-    open (14,file='Out/'//'NAA.txt')
+    open (13,file='out/'//'SSB.txt')
+    open (11,file='out/'//'TAC.txt')
+    open (14,file='out/'//'NAA.txt')
     write(14,*) 'iter',char(9),'year',char(9),'species',char(9),'age',char(9),'number',char(9),'catch'
-    open (15,file='Out/'//'Sistate_bw.txt')
-    open (16,file='Out/'//'Sistate_mac.txt')
-    open (17,file='Out/'//'Sistate_her.txt')
-    open (23,file='Out/'//'Mort_Mat.txt')
-    open (30,file='Out/'//'SSB_decmodul.txt')
-    open (31,file='Out/'//'Recruitment_r1.txt')
+    open (15,file='out/'//'Sistate_bw.txt')
+    open (16,file='out/'//'Sistate_mac.txt')
+    open (17,file='out/'//'Sistate_her.txt')
+    open (23,file='out/'//'Mort_Mat.txt')
+    open (30,file='out/'//'SSB_decmodul.txt')
+    open (31,file='out/'//'Recruitment_r1.txt')
     write(31,*) 'iter',char(9),'year',char(9),'blu_rec',char(9),'mac_rec',char(9), &
                 'her_rec',char(9),'blu_regime',char(9),'mac_regime',char(9),'her_regime'
-    open (32,file='Out/'//'Rec_residuals.txt')
+    open (32,file='out/'//'Rec_residuals.txt')
     write(32,*) 'iter',char(9),'year',char(9),'blu_rec_resid',char(9),'mac_rec_resid', &
                 char(9),'her_rec_resid',char(9),'blu_regime',char(9),'mac_regime',char(9),'her_regime'
-    open (41,file='Out/'//'Weight_kol.txt')
-    open (42,file='Out/'//'Weight_mac.txt')
-    open (43,file='Out/'//'Weight_her.txt')
-    open (44,file='Out/'//'Length_kol.txt')
-    open (45,file='Out/'//'Length_mac.txt')
-    open (46,file='Out/'//'Length_her.txt')
+    open (41,file='out/'//'Weight_kol.txt')
+    open (42,file='out/'//'Weight_mac.txt')
+    open (43,file='out/'//'Weight_her.txt')
+    open (44,file='out/'//'Length_kol.txt')
+    open (45,file='out/'//'Length_mac.txt')
+    open (46,file='out/'//'Length_her.txt')
 
     !! Set random seed. JTT: Maybe done outside main program, to be read in?
     rintvar = 15349668.0_8
@@ -215,7 +215,6 @@ program enac
         !! Write output
         call mort_mat_out
         call output
-        call out_natage     
         !! Proceed to next iteration
     end do
 
