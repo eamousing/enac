@@ -12,7 +12,7 @@ program enac
     implicit none
 
     !! Global and internal procedure variables
-    real :: catch, f, ts, y
+    real :: catch, f, r1, ts, y
     integer :: i, k, icflag, ntacyr
     real, dimension(1:maxspec, 0:maxtacyr) :: dectac
 
@@ -48,9 +48,11 @@ program enac
     open (44,file='out/'//'Length_kol.txt')
     open (45,file='out/'//'Length_mac.txt')
     open (46,file='out/'//'Length_her.txt')
+    ! open (68,file='out/'//'rng_sequence.txt')
 
     !! Set random seed. JTT: Maybe done outside main program, to be read in?
     rintvar = 15349668.0_8
+    ! rng_count = 0
 
     !! Simulation loop of MSE
     do iter = 1, niter
@@ -140,7 +142,8 @@ program enac
                     !! Step 2. Recruitment
                     if (season .eq. recruit_season(species)) then      
                         !! superindividuals module: newsis calls getnrecuits and initialize_sis
-                        call newsis
+                        call newsis(r1)
+                        ! write(*,*) 'Year= ', year, ' Species= ', species, ' Recruits= ', r1
                     end if
             
                     !! Step 3. Get TSB & SSB if start of the year 
@@ -148,6 +151,7 @@ program enac
                         !! enac_get_calcs module
                         call get_tsb(ts)
                         tsb(species,year) = ts
+                        ! write(*,*) 'Year= ', year, ' Species= ', species, ' tsb= ', ts
                     end if
                     !! Get SSB 
                     if (season .eq. spawning_season(species) .and. year .ge. 0) then

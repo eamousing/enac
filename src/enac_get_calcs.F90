@@ -68,8 +68,8 @@ contains
     subroutine get_selection_2(si,selection)
         integer, intent(in) :: si
         real, intent(out) :: selection
-        integer :: a1,a2
-        real :: length,rx,rnx
+        integer :: a1, a2
+        real :: length, rx
         real, dimension(14) :: si_sel_len,si_sel_val
       
         length = sistate(species,si,3)

@@ -660,7 +660,9 @@ contains
     lklend = int(speclen(iart,3))
     depletflag = 0
     do lkl = lklstart, lklend
+      !! Stock numbers at length from observation model (true numbers + error)
       rnact(lkl) = rn(iart,iy,iseas,lkl)
+
       !! Natural mortality form bioparam3 is on annual scale, convert here to seasonal
       rmact(lkl) = bioparam3(iart,iy,iseas,lkl,1) / float(mseas)  
     end do
@@ -691,10 +693,10 @@ contains
       else 
         ! Enough fish, line search for the f, start somewhere = 0.02 seasonal
         fact = 0.02
-        ctempsum = 0.0
         
         !! JTT: Following do loop replaces previous goto - check to see if this produces same result!
         do ii = 1, 20
+          ctempsum = 0.0
           do lkl = lklstart, lklend
             ctempsum = ctempsum + rnact(lkl) * fact * sel(lkl) / (fact * sel(lkl) + rmact(lkl)) * (1.0 - exp(-rmact(lkl) - &
             fact * sel(lkl))) * weight(lkl)
@@ -707,13 +709,13 @@ contains
           end if
       
           if (sqdiff .gt. 0.00001 .and. ctempsum .gt. 0.0) then
-            ! Sikring mot cyclic iterations (JTT: This is old comment - what does it mean?)
             if (ii .lt. 20) then
               fact = fact * tactemp(iart,iy,iseas) / ctempsum
             else
               write(*,*) 'Warning: Line search in ddie within enac_decision_model module broken'
               fact = (fact + fact * tactemp(iart,iy,iseas) / ctempsum) / 2.0
               tactemp(iart,iy,iseas) = (tactemp(iart,iy,iseas) + ctempsum) / 2.0
+              write(*,*) 'Species ', iart, '   year ', iy, '   season ', iseas, '   sqdiff ', sqdiff
               exit
             end if
           else

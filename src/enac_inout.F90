@@ -143,7 +143,12 @@ contains
 
         link_parameters = -999.0
         open(10, file="in/"//"linkfile")
-        call read_line(10,string, io); read(string,*) i,j,k,link_parameters(i,j,k)
+
+        do 
+            call read_line(10, string, io)
+            if (io .ne. 0) exit
+            read(string,*) i, j, k, link_parameters(i,j,k)
+        end do
         close(10)
     end subroutine linkinput
 

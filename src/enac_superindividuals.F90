@@ -7,22 +7,23 @@ module enac_superindividuals
 
 contains
 
-    subroutine newsis()
+    subroutine newsis(r1)
         !! 1. Provides the total number of a year class
         !! 2. Initializes new SIs.
-        real :: r1
+        real, intent(out) :: r1
     
-        ! Get this year's total recruitment: r1
+        ! Get this year's total recruitment: r1 (output)
         call getnrecruits(r1)
-        ! distribute on SIs
+        ! distribute on SIs (r1 is input)
         call initialize_sis(r1)
     end subroutine newsis
 
     subroutine initialize_sis(r1)
         !! Fills in, for each SI that is generated, the sistandard table, with
-        !! standard parameters. 
+        !! standard parameters.
+        real, intent(in) :: r1 
         integer :: i, j, k, regime
-        real :: rx, r1, xsi, rancum
+        real :: rx, xsi, rancum
       
         ! identify SIs that recruit this year, incl. update nsi2: the highest SI number
         nsi2(species) = nsi2(species) + nsiperyear(species)
@@ -83,7 +84,9 @@ contains
 
     subroutine getnrecruits(r1)
         ! Get the total number of recruits for the current species in the current year in r1
-        real :: r0, r1, a, b, sigma, rho, rx, xsi
+        real, intent(out) :: r1
+
+        real :: r0, a, b, sigma, rho, rx, xsi
         real :: amplitude, period, phase, xm, trunchigh, trunclow
         integer :: isrfunc, distribution, regime, trunc_type, i
       
@@ -189,12 +192,12 @@ contains
             end if
             ! Final nummber, never negative
         end do
-      
+        ! write(*,*) "R0: ", r0
         r1 = max(xm * r0,0.0)       
       
         if (link_parameters(species,3,1) .eq. 1 .and. year .gt. 0 .and. species .eq. 3) then 
-            if (year.eq.1) open(67, file='Out/'//'Mac_vs_Her.txt')
-                write(67,*) iter,year,macnum,r1,effect(3)
+            if (year.eq.1) open(67, file='out/'//'Mac_vs_Her.txt')
+                write(67,*) iter, year, macnum, r1, effect(3)
             if(year.eq.nyear) close (67)
         endif
       

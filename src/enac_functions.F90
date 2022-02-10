@@ -169,6 +169,8 @@ contains
         rintvar = dmod(rintvar,100000001.0_8)
         drn = rintvar / 100000001.0_8
         rnx = sngl(drn)
+        ! rng_count = rng_count + 1
+        ! write(68,*) 'RNG count: ', rng_count,'Ran Num:',rnx
     end function rnx
 
     subroutine creategeo(geodist, rintv, maxyr)
@@ -205,7 +207,7 @@ contains
         real :: r, theta
     
         if (stdev .le. 0.) then
-            write(*,*) "Standard Deviation must be +ve"
+            write(*,*) "Standard deviation = ", stdev,": must be +ve"
         else
             call random_number(temp)
             r = (-2.0 * log(temp(1))) ** 0.5
