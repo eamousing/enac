@@ -1,0 +1,85 @@
+# Specification of recruitment regimes (first number ALWAYS species)
+# Blocks of 3 lines for each species (must be in correct order)
+# 3 lines for 
+1 1 Number of regimes
+1 1 Code for regime shifts (1_fixed years, 2= random shifts, 3= shifts due to climate in simulations)
+1 20 If code =1, this line is expected, with the years where the regime shifts take place. First is species
+2 1 Number of regimes
+2 1 Code for regime shifts (1_fixed years, 2= random shifts, 3= shifts due to climate in simulations)
+2 20 If code =1, this line is expected, with the years where the regime shifts take place. First is species
+3 1 Number of regimes
+3 1 Code for regime shifts (1_fixed years, 2= random shifts, 3= shifts due to climate in simulations)
+3 20 If code =1, this line is expected, with the years where the regime shifts take place. First is species
+#
+# recruitment parameters.
+# Format for recruit_parameters:(species,regime,16,3)
+# i: species
+# ir: regime
+# j: parameter number: 
+# k: not read: 1=standard values, 2=actual values from link function, 3=managers values 1 1 0 0.8 Prime factor for recruitment (signalled by the 0)
+# Kolmule, regime 1
+1 1 1 3 SR relationship number: 1 HS, 2 BH, 3 Ricker
+1 1 2 2 Distribution function for noise around SR:  1 Normal, 2 lognormal
+1 1 3 2 Truncation type
+1 1 4 3.148462 a-parameter
+1 1 5 1.708399E-7  b-parameter
+1 1 6 0.1793 Sigma for numbers
+1 1 7 0.2 Lower truncation limit
+1 1 8 1.5 Upper truncation limit
+1 1 9 0.0 Amplitude for periodic recruitment (0: ignore periodic recruitment)
+1 1 10 30 Period duration for periodic recruitment
+1 1 11 -15 Phase for periodic recruitment (year with max value)
+1 1 12 3 Distribution type for spasmodic recruitment
+1 1 13 6.2 Interval between spasmodic recruitments
+1 1 14 0.6 Sigma for interval between spasmodic recruitments
+1 1 15 3.19 Factor for spasmodic recruitment (1: Ignore spasmodic recruitment)
+1 1 16 -3 First spasmodic year
+1 1 17 14 Medium length when recruitment occurs
+1 1 18 0.2 CV for middle length at recruitment 1 1 0 0.8 Prime factor for recruitment (signalled by the 0)
+1 1 19 2 (1 = mackerel predation, 2 = no predation)
+1 1 20 0.6992 Rho for autocorrelated recruitment residuals
+# Mackerel regime 1
+2 1 1 1 SR relationship number: 1 HS, 2 BH, 3 Ricker
+2 1 2 2 Distribution function for noise around SR:  1 Normal, 2 lognormal
+2 1 3 2 Truncation type
+2 1 4 6412706 a-parameter
+2 1 5 2001923 b-parameter
+2 1 6 0.1418 Sigma for numbers
+2 1 7 0.2 Lower truncation limit
+2 1 8 1.3 Upper truncation limit
+2 1 9 0.0 Amplitude for periodic recruitment (0: ignore periodic recruitment)
+2 1 10 30 Period duration for periodic recruitment
+2 1 11 -15 Phase for periodic recruitment (year with max value)
+2 1 12 3 Distribution type for spasmodic recruitment
+2 1 13 6.5 Interval between spasmodic recruitments
+2 1 14 0.3 Sigma for interval between spasmodic recruitments
+2 1 15 1.0 Factor for spasmodic recruitment (1: Ignore spasmodic recruitment)
+2 1 16 -3 First spasmodic year
+2 1 17 21 Medium length when recruitment occurs
+2 1 18 0.2 CV for middle length at recruitment 1 1 0 0.8 Prime factor for recruitment (signalled by the 0)
+2 1 19 2 (1 = mackerel predation, 2 = no predation)
+2 1 20 0.823 Rho for autocorrelated recruitment residuals
+# Sild regime 1
+3 1 1 3 SR relationship number: 1 HS, 2 BH, 3 Ricker
+3 1 2 2 Distribution function for noise around SR:  1 Normal, 2 lognormal
+3 1 3 2 Truncation type
+3 1 4 11.34727  a-parameter
+3 1 5 2.98979E-7  b-parameter
+3 1 6 0.87 Sigma for numbers
+3 1 7 0.2 Lower truncation limit
+3 1 8 6.5 Upper truncation limit
+3 1 9 0.0 Amplitude for periodic recruitment (0: ignore periodic recruitment)
+3 1 10 30 Period duration for periodic recruitment
+3 1 11 -15 Fase for periodisk rekruttering (�r med topp-verdi)
+3 1 12 3 Fordelingstype for spasmodisk rekruttering
+3 1 13 6.0 Intervall mellom spasmodiske rekrutteringer
+3 1 14 2.0 Halve intervallbredde for spasmodiske rekrutteringer
+3 1 15 7.8 Faktor for spasmodiske rekrutteringer (1: Ignorer spasmodiske rekrutteringer)
+3 1 16 -6 F�rste spasmodiske �r
+3 1 17 10 Middel-lengde ved rekruttering
+3 1 18 0.2 CV for middel-lengde ved rekruttering1 1 0 0.8 Prime factor for recruitment (signalled by the 0)
+3 1 19 1 (1=makrellpredasjon, 2 = ingen predasjon)
+3 1 20 0.0 Rho for autocorrelated recruitment residuals
+1 1 0 695013. Prime factor. The second index is dummy
+2 1 0 1.0 Prime factor. The second index is dummy
+3 1 0 1125160. Prime factor. The second index is dummy

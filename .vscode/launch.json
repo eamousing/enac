@@ -1,0 +1,19 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "name": "Run GDB",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceRoot}/src/enac.unix",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceRoot}/src",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "preLaunchTask": "make",
+        }
+    ]
+}
