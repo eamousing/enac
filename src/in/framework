@@ -1,0 +1,33 @@
+# file framework
+# Set the basic frame for simulations, read by subroutine setframe
+30 Number of forward simulation years
+12 Number of time steps per year
+1 Number of iterations in stochastic simulation
+# Number of species
+3 Number of species
+# Species names (Numbered internally according to sequence here)
+Kolmule
+Makrell
+Sild
+# Information by species
+#Species 1 Kolmule
+20 Oldest age
+100 Number of super-individuals per year
+3 Spawning season (p 38, WGWIDE 2020)
+6 Recruiting season
+2 Number of link functions (in addition to recruitment)
+0.2 Priming F (annual)
+#Species 2 Makrell
+20 Oldest age
+100 Number of super-individuals per year
+3 Spawning season
+6 Recruiting season
+2 Number of link functions (in addition to recruitment)
+0.2 Priming F (annual)
+#Species 3 Sild
+20 Oldest age
+100 Number of super-individuals per year
+3 Spawning season
+6 Recruiting season
+2 Number of link functions (in addition to recruitment)
+0.2 Priming F (annual)

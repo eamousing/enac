@@ -1,0 +1,68 @@
+# Each line:  Species, Link_function number, parameter_number, value
+# Link function 0 should be for recruitment R0, here it is asymbell for dependency on temperature
+1 0 1  10 Temperature optimum
+1 0 2  2  a1 in assymbell
+1 0 3  3  a2 in assymbell
+1 0 4  2  power-parameter in assymbell
+2 0 1  10 Temperature optimum
+2 0 2  2  a1 in assymbell
+2 0 3  3  a2 in assymbell
+2 0 4  2  power-parameter in assymbell
+3 0 1  10 Temperature optimum
+3 0 2  2  a1 in assymbell
+3 0 3  3  a2 in assymbell
+3 0 4  2  power-parameter in assymbell
+# Link-function 1: Growth as function of temperature and prey availability
+1 1 1  3.580373  Linf
+1 1 2  0  Stingningstall Linf
+1 1 3  -1.025233   K
+1 1 4  -0.06097217   Stingningstall K
+1 1 5  -6.50108423 Varians
+1 1 6  350 p50 for logistic dependence of k on prey (ref. scale of prey-input)
+1 1 7  0.002 slope for logistic dependence of k on prey
+1 1 8  -2  k_season: k depends on environment k-seasons time-steps ago
+2 1 1  3.70114147  Linf
+2 1 2  0  Stingningstall Linf
+2 1 3  -0.71512709 K
+2 1 4  -0.06568387   Stingningstall K
+2 1 5  -6.82303419  Varians
+2 1 6  350 p50 for logistic dependence of k on prey (ref. scale of prey-input)
+2 1 7  0.002 slope for logistic dependence of k on prey
+2 1 8  -2 k_season: k depends on environment k-seasons time-steps ago
+3 1 1  3.692172  Linf
+3 1 2  -0.001280323  Stingningstall Linf
+3 1 3  -1.463844735   K
+3 1 4  -0.137729526   Stingningstall K
+3 1 5  -0.301039586 varians
+3 1 6  -2.100374894 K for juvenile 
+3 1 7  -0.226769633 Stingningstall K for juvenile
+3 1 8  2 k_season: k depends on environment k-seasons time-steps ago
+# Link-function 2: Condition as function of temperature and prey availability
+1 2 1  0.3 Minimum relative condition-value
+1 2 2 10 Temperature optimum for condition
+1 2 3  2 a1 in assymbell
+1 2 4  3 a2 in assymbell
+1 2 5  2 power-parameter in assymbell
+1 2 6  350 p50 for logistic dependence of condition on prey (ref. scale of prey-input)
+1 2 7  0.002 slope for logistic dependence of condition on prey
+1 2 8  -2 cond_season: condition depends on environment cond-seasons time-steps ago
+2 2 1  0.3 Minimum relative condition-value
+2 2 2 10 Temperature optimum for condition
+2 2 3  2 a1 in assymbell
+2 2 4  3 a2 in assymbell
+2 2 5  2 power-parameter in assymbell
+2 2 6  350 p50 for logistic dependence of condition on prey (ref. scale of prey-input)
+2 2 7  0.002 slope for logistic dependence of condition on prey
+2 2 8  -2 cond_season: condition depends on environment cond-seasons time-steps ago
+3 2 1  0.3 Minimum relative condition-value
+3 2 2 10 Temperature optimum for condition
+3 2 3  2 a1 in assymbell
+3 2 4  3 a2 in assymbell
+3 2 5  2 power-parameter in assymbell
+3 2 6  350 p50 for logistic dependence of condition on prey (ref. scale of prey-input)
+3 2 7  0.002 slope for logistic dependence of condition on prey
+3 2 8  -2 cond_season: condition depends on environment cond-seasons time-steps ago
+# Rlink test: Mackerel predation
+1 3 1 0 mackerel predation on blue whiting (1=on 0=off)
+2 3 1 0 mackerel predation on mackerel (1=on 0=off)
+3 3 1 1 mackerel predation on herring (1=on 0=off)

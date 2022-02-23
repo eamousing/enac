@@ -1,0 +1,94 @@
+# Management options (species, option, nr )
+# Species 1 - Kolmule
+1 1 1 Point in time (season) for intial stock: Must be 1!
+1 2 100 Quota for year 0 (for whole year) Not used! see decision_model
+1 3 1 Last year quota (iyt) (first quota year is year 1)
+1 4 1 Start year decision basis 1
+1 5 1 Final year decision basis 1
+1 6 1 Start year decision basis 2
+1 7 1 Final year decision basis 2
+1 8 1 State descriptor(?) basis 1 (1=SSB or 2=TSB)
+1 9 2 State descriptor(?) basis 2 (SSB or TSB)
+# SSB is at spawning time, TSB is average over the year
+1 10 1 State descriptor species basis 1: 1=current species 2=all species
+1 11 2 State descriptor species basis 2:
+1 12 1 Code for derivation of state (average or trend) basis 1  
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time: Average change per year
+1 13 1 Code for derivation of state (average or trend) basis 2
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time: Average change per year
+1 14 1500000 Action limit 1
+1 15 2250000 Action limit 2
+1 16 1 Type of instrument
+# 1  F-value
+# 2  TAC-value
+# 3  HR-value
+1 17 0.01 Standard value for instrument (?) (see kapittel 5)
+1 18  0.39 Alpha value (above limit 2)
+1 19  10 Minimum quota
+1 20  10000000 Maximum allowable quota
+1 21  0 Attenuation: (TAC(y)=attenuation*TAC(y-1)+(1-attenuation)*TAC(y)
+1 22  125000000 !33750000 Action limit 3 
+# Species 2 Mackerel
+2 1 1 Point in time (season) for intial stock
+2 2  100 Quota for year 0 (for whole year)
+2 3  1 Last year quota (iyt) (first quota year is year 1)
+2 4  1 Start year decision basis 1
+2 5  1 Final year decision basis 1
+2 6  1 Start year decision basis 2
+2 7  1 Final year decision basis 2
+2 8  1 State descriptor(?) basis 1 (1=SSB or 2=TSB)
+2 9  2 State descriptor(?) basis 2 (SSB or TSB)
+# SSB is at spawning time, TSB is average over the year
+2 10 1 State descriptor species basis 1: 1=current species 2=all species
+2 11 2 State descriptor species basis 2:
+2 12 1 Code for derivation of state (average or trend) basis 1  
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time: Average change per year 
+2 13 1 Code for derivation of condition (average or trend) basis 2
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time
+2 14 1940000 Action limit 1
+2 15 2570000 Action limit 2
+2 16 1 Instrument type
+#1  F-value
+#2  TAC-value
+#3  HR-value
+2 17 0.01 Default value for instrument (see chapter 5)
+2 18  0.23 Alpha value (above limit 2)
+2 19  10 Minimum quota
+2 20  10000000 Maximum allowable quota
+2 21  0 Attenuation: (TAC (y) = attenuation * TAC (y-1) + (1-attenuation) * TAC (y)
+2 22  125000000 !3450000 Action limit 3 
+# Species 3 Herring
+3 1 1 Time value (season) for intial stock
+3 2  100 Quota for year 0 (for the whole year)
+3 3  1 Last quota year (iyt) (first quota year is year 1)
+3 4  1 Start year decision basis 1
+3 5  1 Final year decision basis 1
+3 6  1 Start year decision basis 2
+3 7  1 Final year decision basis 2
+3 8  1 State descriptor basis 1 (1 = SSB or 2 = TSB)
+3 9  1 Condition descriptor basis 2 (SSB or TSB)
+# SSB is at spawning time, TSB is average over the year 
+3 10 1 Condition descriptor species basis 1: 1 Current species 2 All species
+3 11 2 State descriptor species basis 2:
+3 12 1 Code for derivation of condition (average or trend) basis 1  
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time: Average change per year 
+3 13 1 Code for derivation of condition (average or trend) basis 2
+# 1 Average over time (single year: Same start and end year)
+# 2 Linear trend over time
+3 14 2500000 Action limit 1
+3 15 3000000 Action limit 1
+3 16 1 Type of instrument
+#1  F-value
+#2  TAC-value
+#3  HR-value
+3 17 0.05 Default value for instrument (see chapter 5)
+3 18 0.09 Alpha value (above limit 2)
+3 19 10 Minimum quotas
+3 20 10000000 Maximum allowable quota
+3 21 0 Attenuation: (TAC (y) = attenuation * TAC (y-1) + (1-attenuation) * TAC (y)
+3 22 125000000 !75000000 Action limit 3 

@@ -20,9 +20,10 @@ module enac_decision_model
 
 contains
 
-  subroutine decision_model(maxtacyr, maxspec, maxtimestep, maxlkl, dectac, ntacyr)
+  subroutine decision_model(maxtacyr, maxspec, maxtimestep, maxlkl, dectac, ntacyr,rndmvnorm, assesserror)
     !! In and out arguments
-    integer, intent(in) :: maxtacyr, maxspec, maxtimestep, maxlkl
+    integer, intent(in) :: maxtacyr, maxspec, maxtimestep, maxlkl, assesserror
+    real, dimension(maxspec, 1000, maxage) :: rndmvnorm
     real, dimension(1:maxspec, 0:maxtacyr), intent(out) :: dectac
     integer, intent(out) :: ntacyr
 
@@ -36,18 +37,27 @@ contains
     ! year is year 0 and the tac year is year 1. Normally, maxtacyr is 2, since it sometimes
     ! is needed to project the stock into the year after the TAC is taken
     
+
     !! Local variables
-    integer :: mart, mseas, maxl, i, iart, iy, iseas, lkl, lklminus, lklplus, si, regime
-    real :: length, mlow, mhigh, slope1, slope2, l1_50, l2_50, natmor
+    ! Changed by Alfonso: I need to define the maximum age (maxa), that will be passed as an argument to the subroutine decmodul, which
+    ! in turn will pass it to the subroutine obsmodel. Also, there is need to create the parameter aka, that will be used in the loop to populate the array 
+    ! rninit later on. We also need to create two 
+    ! random related parameters, one real to use with the random_number function, and one integer to use in the selection of the row with the multivariate
+    ! random vector. Also, create a vector called dimarray to store the dimensions of the array rndmvnorm, so the second dimension (number of multivariate 
+    ! random vectors) can be taken automatically to create the rndnumint.
+    integer :: mart, mseas, maxl, i, iart, iy, iseas, lkl, lklminus, lklplus, si, regime, maxa, aka, rndnumint
+    real :: length, mlow, mhigh, slope1, slope2, l1_50, l2_50, natmor, rndnum
     real, dimension (1:maxspec, 1:4) :: speclen  !cols: interval, min size class, max size class, min size for TSB
     real, dimension (1:maxspec, 0:maxtacyr,10) :: bioparam1  !3rd dim: for each parameter defined below 
     real, dimension (1:maxspec, 0:maxtacyr, 1:maxtimestep, 1:4, 2) :: bioparam2 !4th dim: parameter, 5th dim: parameter specific to something (juvenile and adult K)
     real, dimension (1:maxspec, 0:maxtacyr, 1:maxtimestep, maxlkl, 3) :: bioparam3
-    real, dimension (1:maxspec, 1:maxlkl, 2) :: rninit ! rninit(,,1) is initial stock numbers, rinit(,,2) is sigma for obs noise on these numbers
+    ! changed by Alfonso: I modified rinit, so it includes another dimension with the age, I want to create an age-length key, that
+    ! that will be messed with the random multivariate normal error.
+    real, dimension (1:maxspec,1:maxlkl,1:maxage,2) :: rninit ! rninit(,,1) is initial stock numbers, rinit(,,2) is sigma for obs noise on these numbers
     real, dimension (1:maxspec, 1:maxtimestep) :: seastac
     real, dimension (1:maxspec, 22) :: options
     integer, dimension (1:maxspec) :: regim
-
+    integer, dimension(3) :: dimarray
     ! Species currently defined in framework:
     ! 1: kolmule
     ! 2: makrell
@@ -59,7 +69,10 @@ contains
     mart = maxspec
     mseas = maxtimestep
     maxl = maxlkl ! from enac_commons, only used here
-  
+    ! Changed by Alfonso: I need to define the maximum age, that will be passed as an argument to the subroutine decmodul, which
+    ! in turn will pass it to the subroutine obsmodel
+    maxa = maxage !max age is defined within enac_commons.inc
+
     ! The standard values used so far are hard-coded. Should be coordinated with the main program.
     ! Interval for length classes - 1 cm everywhere
     speclen(1,1) = 1.0      
@@ -155,33 +168,67 @@ contains
       end do
     end do
   
+
     ! Initial numbers from sistate  
-    do iart = 1, mart
+    ! Change by Alfonso: I have changed rninit for it to store also the age of the superindividual, which is contained in the 
+    ! sistatekeep database. The age will be used later within the obsmod subroutine to recalculate the numbers by age-length based in
+    ! in the multivariate normal distribution of the assessment error. Once the numbers by age-length have been confused, then they
+    ! can be added up by length category, for the code to follow the process as it was previously designed.
+    do iart=1,mart
       ! Initialize      
-      do lkl = 1, maxl
-        rninit(iart,lkl,1) = 0.0
-        !! rninit(.,.,2) is used to make noise to the N-values in the observation model.
-        !! Here there is a need for extensions, e.g. length dependence, annual effects, etc.
-        !! and it should not be hardcoded.
-        rninit(iart,lkl,2) = 0.30
-      end do
+      ! Changed by Alfonso: In first place, randomly generate a integer number between 1 and the maximum number of vectors with random error (defined
+      ! by the dimension 2 in shape(rndmvnorm)). This number will define the vector of random multivariate errors that is going to be used.
+      dimarray=shape(rndmvnorm)
+      rndnum=rnx(rintvar)
+      rndnumint = int(rndnum*dimarray(2))
+   
+      ! These lines are intended to check that the line chosen randomly is different for each year and iteration, but it is repeated in separate runs (based
+      ! in seed rintvar)
+      ! print *, "species", iart
+      ! print *, "rndnumint", rndnumint
       
-      lklminus = int(speclen(iart,2))
-      lklplus = int(speclen(iart,3))
-      
+      if(assesserror.eq.0) then
+        do lkl=1,maxl
+          do aka=1,maxa
+           rninit(iart,lkl,aka,1)=0.0
+          ! rninit(.,.,.,2) is used to put noise to the N-values in the observation model.
+          ! If the variable assesserror is set as 0 in the enac_main.F90 file, then no error is applied to the numbers at age
+          ! from the operating model, hence rninit(iart,lkl,aka,2) is set as 1 for all ages.
+           rninit(iart,lkl,aka,2)=1    
+          enddo
+         enddo  
+      else
+        do lkl=1,maxl
+          do aka=1,maxa
+           rninit(iart,lkl,aka,1)=0.0
+          ! rninit(.,.,.,2) is used to put noise to the N-values in the observation model.
+          ! If the variable assesserror is set as 1 (or different than 0) in the enac_main.F90 file, then rninit(iart,lkl,aka,2) will be taken
+          ! from the values generated randomly from the multivariate distributions 
+           rninit(iart,lkl,aka,2)=rndmvnorm(iart,rndnumint,aka)    
+          enddo
+         enddo
+      endif
+
+      lklminus=nint(speclen(iart,2))
+      lklplus=nint(speclen(iart,3))
+   
       ! Loop through each SI 
-      do si = nsistart(iart), nsi2(iart)   ! GLOBAL 
-        lkl = int(sistatekeep(iart,si,3)) ! GLOBAL
-        if (lkl .lt. lklminus) then
-          rninit(iart,lklminus,1) = rninit(iart,lklminus,1) + sistatekeep(iart,si,1) ! GLOBAL
-        else if (lkl .gt. lklplus) then
-          rninit(iart,lklplus,1) = rninit(iart,lklplus,1) + sistatekeep(iart,si,1) ! GLOBAL
+      do si=nsistart(iart),nsi2(iart)   
+       !lkl=nint(sistatekeep(iart,si,3))
+       lkl=int(sistatekeep(iart,si,3))
+       aka=int(sistatekeep(iart,si,2))
+   
+        if (lkl.lt.lklminus) then
+         rninit(iart,lklminus, aka,1)=rninit(iart,lklminus, aka,1)+sistatekeep(iart,si,1)
+        else if (lkl.gt.lklplus) then
+         rninit(iart,lklplus, aka,1)=rninit(iart,lklplus, aka,1)+sistatekeep(iart,si,1)
         else
-          rninit(iart,lkl,1) = rninit(iart,lkl,1) + sistatekeep(iart,si,1) ! GLOBAL
-        end if
-      end do
-    end do
-  
+         rninit(iart,lkl, aka,1)=rninit(iart,lkl, aka,1)+sistatekeep(iart,si,1)
+        endif
+      enddo
+     enddo
+   
+
   ! seastac - hard-coded (seasonal distribution of TAC)
     do iart = 1, mart ! Loop through each species
       do iseas = 1, mseas ! Loop through each season
@@ -202,23 +249,25 @@ contains
   
     regim = recregime  ! GLOBAL
     
-    call decmodul(mart,maxtacyr,mseas,maxl,speclen,bioparam1,bioparam2,bioparam3,rninit,options,seastac,rintvar,dectac,regim) ! GLOBAL (rintvar)
+    call decmodul(mart,maxtacyr,mseas,maxl,maxa,speclen,bioparam1,bioparam2,bioparam3,rninit,options,seastac,rintvar,dectac,regim) ! GLOBAL (rintvar)
     ntacyr = maxtacyr
   end subroutine decision_model
 
-  subroutine decmodul(mart, maxtacyr, mseas, maxl, speclen, bioparam1, bioparam2, & 
+  subroutine decmodul(mart, maxtacyr, mseas, maxl, maxa, speclen, bioparam1, bioparam2, & 
     bioparam3, rninit, options, seastac, rintvar, dectac, regim)
     ! All subroutines have the prefix d to avoid confusion with similar routines in the population model  
     ! Some variables have names similar to enac_commons, but commons are not visible here    
     ! These are transferred variables
    
     !! In and out arguments
-    integer, intent(in) :: mart, maxtacyr, mseas, maxl
+    ! Changed by Alfonso: I need to define the maximum age (maxa), that will be passed as an argument to the subroutine obsmodel. In addition, 
+! the dimensions of the array rninit have to be redefined accordingly to what it was done before, so the age is now included as another dimension.
+    integer, intent(in) :: mart, maxtacyr, mseas, maxl, maxa
     real, dimension (1:mart, 1:4), intent(in) :: speclen
     real, dimension (1:mart, 0:maxtacyr, 10), intent(in) :: bioparam1
     real, dimension (1:mart, 0:maxtacyr, 1:mseas, 1:4, 2), intent(in) :: bioparam2
     real, dimension (1:mart, 0:maxtacyr, 1:mseas, maxl, 3), intent(in) :: bioparam3
-    real, dimension (1:mart, 1:maxl, 2), intent(in) :: rninit
+    real, dimension (1:mart,1:maxl,1:maxa,2), intent(inout) :: rninit
     real, dimension (1:mart, 22), intent(in) :: options
     real, dimension (1:mart, 1:mseas), intent(inout) :: seastac
     double precision, intent(in) :: rintvar
@@ -226,7 +275,7 @@ contains
     integer, dimension (1:mart), intent(in) :: regim
 
     !! Local variables
-    integer :: iart, iy, lkl, iseas, istart, nriter
+    integer :: iart, iy, lkl, iseas, istart, nriter, aka
     real :: summ, ssq
     real, dimension(mart, 0:maxtacyr, mseas) ::  tactemp
     real, dimension(mart, 0:maxtacyr, mseas, maxl) :: rn
@@ -282,7 +331,7 @@ contains
     end do
    
     !! Fill in rn with obs-model values for first year and season, add noise to rn-values
-    call dobsmodel(rn,mart,maxtacyr,mseas,maxl,speclen,rninit,options,rintvar)
+    call dobsmodel(rn,mart,maxtacyr,mseas,maxl,maxa,speclen,rninit,options,rintvar)
    
     ! Iteration loop
     do nriter = 0, 20
@@ -362,15 +411,16 @@ contains
     end do
   end subroutine decmodul
 
-  subroutine dobsmodel(rn,mart,maxtacyr,mseas,maxl,speclen,rninit,options,rintvar)
+  subroutine dobsmodel(rn,mart,maxtacyr,mseas,maxl,maxa,speclen,rninit,options,rintvar)
     !! dobsmodel fills in rn with obs-model values for first year and season,
     !! by adding lognormal random error to the true numbers in rninit
     
     !! In and out arguments
+    !! Modified by Alfonso, maxa is needed in the loop to apply the multivariate random error by age to the rninit array before collapsing only by length in rn.
     real, dimension(mart,0:maxtacyr,mseas,maxl), intent(out) :: rn
-    integer, intent(in) :: mart, maxtacyr, mseas, maxl
+    integer, intent(in) :: mart, maxtacyr, mseas, maxl, maxa
     real, dimension(mart,1:4), intent(in) :: speclen
-    real, dimension(mart,maxl,2), intent(in) :: rninit
+    real, dimension(mart,maxl,maxa,2), intent(inout) :: rninit
     real, dimension(mart,22), intent(in) :: options
     double precision, intent(in) :: rintvar
         
@@ -379,17 +429,18 @@ contains
     real :: sigma, rx, xsi
   
     ! Calculate noisy initial stock numbers
-    do iart = 1, mart
-      iseas = int(options(iart,1))
-      lklstart = int(speclen(iart,2))
-      lklend = int(speclen(iart,3))
-      do lkl = lklstart, lklend
-        sigma = rninit(iart,lkl,2)
-        rx = rnx(rintvar)
-        xsi = snrn(rx) * sigma
-        rn(iart,0,iseas,lkl) = rninit(iart,lkl,1) * exp(xsi) 
-      end do
-    end do
+    do iart=1,mart
+      iseas=nint(options(iart,1))
+      lklstart=nint(speclen(iart,2))
+      lklend=nint(speclen(iart,3))
+      do lkl=lklstart,lklend
+       ! changed by Alfonso: in first place multiply the number of individuals by length-age times the random multivariate error for that age-length
+       rninit(iart,lkl,1:maxa,1)=rninit(iart,lkl,1:maxa,1)*rninit(iart,lkl,1:maxa,2)
+       ! Next, add for each length category the number of individuals already "messed" with the random multivariate error for all ages
+       rn(iart,0,iseas,lkl)=sum(rninit(iart,lkl,1:maxa,1))
+      enddo
+     enddo
+
   end subroutine dobsmodel
 
   subroutine dproject(rn,tactemp,mart,maxtacyr,mseas,maxl,speclen,bioparam1,bioparam2,bioparam3,options)

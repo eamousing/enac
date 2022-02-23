@@ -13,7 +13,7 @@ program enac
 
     !! Global and internal procedure variables
     real :: catch, f, r1, ts, y
-    integer :: i, k, icflag, ntacyr
+    integer :: i, k, icflag, ntacyr, assesserror
     real, dimension(1:maxspec, 0:maxtacyr) :: dectac
 
     call setframe
@@ -50,9 +50,30 @@ program enac
     open (46,file='out/'//'Length_her.txt')
     ! open (68,file='out/'//'rng_sequence.txt')
 
+    ! Open the file with the vectors of random assessment error from a multivariate normal distribution
+    open (47,file='in/blue_whiting_rndmvnormval_with_R.txt')
+    read (47,*) rndmvnorm_kol
+    open (48,file='in/mackerel_rndmvnormval_with_R.txt')
+    read (48,*) rndmvnorm_mac
+    open (49,file='in/herring_rndmvnormval_with_R.txt')
+    read (49,*) rndmvnorm_her
+  
+    do species=1,maxspec
+      if(species.eq.1) then
+        rndmvnorm(species,1:1000,1:maxage) =rndmvnorm_kol
+      else if(species.eq.2) then
+          rndmvnorm(species,1:1000,1:maxage) =rndmvnorm_mac
+        else
+          rndmvnorm(species,1:1000,1:maxage) =rndmvnorm_her
+        endif
+    enddo
+
     !! Set random seed. JTT: Maybe done outside main program, to be read in?
     rintvar = 15349668.0_8
     ! rng_count = 0
+
+    ! Set 1  or 0 (on and off respectively) the variable assesserror to apply or not random error to assessment (to the observations from the OM)
+    assesserror = 0 
 
     !! Simulation loop of MSE
     do iter = 1, niter
@@ -191,7 +212,10 @@ program enac
                     !! TAC for next year is set according to decision model
                     if(season .eq. 1) then
                         !! enac_decision_model 
-                        call decision_model(maxtacyr,maxspec,maxtimestep,maxlkl,dectac,ntacyr)
+                        !! Changed by Alfonso: the rndmvnorm had to be included also in the arguments for decision_model(), 
+                        !! it contains the vectors with the random multivariate error
+                        call decision_model(maxtacyr,maxspec,maxtimestep,maxlkl,dectac,ntacyr,rndmvnorm, assesserror)
+                        !! call decision_model(maxtacyr,maxspec,maxtimestep,maxlkl,dectac,ntacyr)
             
                         !! ntacyr is the number of years filled in dectac - it is an internal parameter in decision_model
                         do species = 1, maxspec

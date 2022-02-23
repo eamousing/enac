@@ -153,6 +153,13 @@ module enac_commons
     ! Abundance of Mackerel ages 2+ - for plotting effects...
     real :: macnum
 
+    ! For simulating the assessment error. 1000 vectors of random values obtained for all ages (1 to maxage) from a multivariate normal distribution 
+    ! of the estimated assessment error for each stock.
+    real, dimension(1000, maxage) :: rndmvnorm_kol
+    real, dimension(1000, maxage) :: rndmvnorm_mac
+    real, dimension(1000, maxage) :: rndmvnorm_her
+    real, dimension(maxspec, 1000, maxage) :: rndmvnorm
+
     ! Other by Kjell. TODO: make descriptive comment
     real :: actdev(maxspec, maxyear)
 
